@@ -108,17 +108,15 @@ def fileparser(filename):
 	for co in coordinates:
 		if co[0] == 'level':
 			if co[1] == '1':
-				print ('1')
 				continue
 			if co[1] == '2':
-				print ('2')
 				bg = pygame.image.load("Level2BG.png")
 			if co[1] == '3':
-				print ('3')
 				bg = pygame.image.load("Level3BG.png")
 			if co[1] == '4':
-				print ('4')
 				bg = pygame.image.load("Level4BG.png")
+		if co[0] == 'length':
+			maxlength = int(co[1])
 	wizard = Wizard(canvas)
 	dirchanged = False
 	clock = pygame.time.Clock()
@@ -173,9 +171,9 @@ def fileparser(filename):
 		if not dirchanged:
 			wizard.turn('front')
 		if wizard.move() == 'left':
-			if bgx != 0:
+			if bgx != 0 and wizard.rect.left == 150:
 				bgx += 12
-			elif distance != 1:
+			elif distance != 1 and wizard.rect.left == 150:
 				bgx += 12
 			else:
 				if wizard.rect.left > 0:
@@ -183,9 +181,9 @@ def fileparser(filename):
 				else:
 					wizard.move()
 		if wizard.move() == 'right':
-			if bgx != 0:
+			if bgx != 0 and wizard.rect.left == 150:
 				bgx -= 12
-			elif distance != maxdistance:
+			elif distance != maxdistance and wizard.rect.left == 150:
 				bgx -= 12
 			else:
 				if wizard.rect.left < 150:
@@ -194,7 +192,6 @@ def fileparser(filename):
 					if wizard.rect.right < 1200:
 						wizard.rect.right += 12
 		pygame.display.update()
-		print (distance)
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This section parses and runs the fileparser function on every single level
 fileparser("water")
