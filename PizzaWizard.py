@@ -7,7 +7,7 @@ class Wizard:
 #This section creates some variables that will be required for the functioning of this class
 		self.canvas = canvas
 		self.health = 10
-		self.rect = pygame.Rect(150, 300, 150, 200)
+		self.rect = pygame.Rect(150, 307, 150, 200)
 		self.spells = []
 		self.timer = time.time()
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ class Wizard:
 			neg = 1
 			if self.jumpcount < 0:
 				neg = -1
-			self.rect.bottom -= int((self.jumpcount**2)*0.5*neg)
+			self.rect.bottom -= int((self.jumpcount**2) * 0.5 * neg)
 			self.jumpcount -= 1
 		else:
 			if self.rect.bottom > 1090 and self.rect.bottom < 1110:
@@ -108,8 +108,10 @@ def fileparser(filename):
 				bg = pygame.image.load("Level4BG.png")
 	wizard = Wizard(canvas)
 	dirchanged = False
+	clock = pygame.time.Clock()
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 	while True:
+		clock.tick(50)
 		canvas.fill((255, 255, 255))
 		canvas.blit(bg, (bgx, 0))
 		if bgx < 0:
