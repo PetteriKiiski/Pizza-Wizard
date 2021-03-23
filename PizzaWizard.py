@@ -1,9 +1,7 @@
-#I imported time to see how long the code was taking
 import pygame, sys, time
 from pygame.locals import *
 #This class will contain all variables for the wizard
 class Wizard:
-#Initializer function
 	def __init__(self, canvas):
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This section creates some variables that will be required for the functioning of this class
