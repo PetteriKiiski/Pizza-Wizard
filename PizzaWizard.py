@@ -18,9 +18,11 @@ class Wizard:
 		self.imagesLeft = [pygame.image.load("WizardLeft1.png"), pygame.image.load("WizardLeft2.png")]
 		self.index = 0
 		self.images = self.imagesLeft
+		self.atboarder = False
 		self.jumping = False
 		self.jumpcount = 10
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
+#This function jumps in a parabela
 	def parabela(self):
 		if self.jumpcount >= -10:
 			neg = 1
@@ -34,14 +36,19 @@ class Wizard:
 			else:
 				self.jumping = False
 				self.jumpcount = 10
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+#This section displays the wizard, and changes the image every three tenth of a second
 	def display(self):
 		self.canvas.blit(self.images[self.index], self.rect)
-		if time.time() - self.timer >= 0.3:
-			self.timer = time.time()
-			if self.index:
-				self.index = 0
-			else:
-				self.index = 1
+		if self.rect.left > 0:
+			if time.time() - self.timer >= 0.3:
+				self.timer = time.time()
+				if self.index:
+					self.index = 0
+				else:
+					self.index = 1
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+#This function changes the animation images
 	def turn(self, direction):
 		if direction == 'right':
 			self.images = self.imagesRight
@@ -49,7 +56,13 @@ class Wizard:
 			self.images = self.imagesLeft
 		if direction == 'front':
 			self.images = self.imagesFront
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 	def move(self):
+		'''
+		This section will move the wizard if he is supposed to jump
+		or return the value he is supposed to move
+		since he is acutally just in one position
+		'''
 		if self.jumping:
 			self.parabela()
 		if self.images == self.imagesFront:
@@ -110,16 +123,25 @@ def fileparser(filename):
 	dirchanged = False
 	clock = pygame.time.Clock()
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
+	'''This section contains the while statement for the mainloop
+	ticks our little clock we defined three lines up
+	(if you count the comment) and displays everything'''
 	while True:
 		clock.tick(50)
 		canvas.fill((255, 255, 255))
 		canvas.blit(bg, (bgx, 0))
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+#This function makes it an infinity background until it reaches the end or the beginning
 		if bgx < 0:
 			canvas.blit(bg, (bgx + 1200, 0))
 		if bgx > 0:
 			if distance != 1:
 				canvas.blit(bg, (bgx - 1200, 0))
 		if bgx in [1200, -1200]:
+			if bgx == 1200:
+				distance -= 1
+			if bgx == -1200:
+				distance += 1
 			bgx = 0
 		wizard.display()
 		canvas.blit(grass, (0, 500))
@@ -151,15 +173,28 @@ def fileparser(filename):
 		if not dirchanged:
 			wizard.turn('front')
 		if wizard.move() == 'left':
-			if distance != 1:
-				bgx += 4
+			if bgx != 0:
+				bgx += 12
+			elif distance != 1:
+				bgx += 12
 			else:
-				if wizard.rect.left:
-					pass  #...
-				wizard.rect.right -= 4
+				if wizard.rect.left > 0:
+					wizard.rect.right -= 12
+				else:
+					wizard.move()
 		if wizard.move() == 'right':
-			bgx -= 4
+			if bgx != 0:
+				bgx -= 12
+			elif distance != maxdistance:
+				bgx -= 12
+			else:
+				if wizard.rect.left < 150:
+					wizard.rect.right += 12
+				else:
+					if wizard.rect.right < 1200:
+						wizard.rect.right += 12
 		pygame.display.update()
+		print (distance)
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This section parses and runs the fileparser function on every single level
 fileparser("water")
