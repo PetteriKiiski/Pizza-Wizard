@@ -1,0 +1,13 @@
+Monster sizes
+
+Monster name: width, height
+
+Ogre: 115, 145
+
+Rotting teeth: 133, 144
+
+Skatebourder: 147, 145
+
+dragon: 129, 179
+
+Wizard: 138, 193

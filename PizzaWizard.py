@@ -7,7 +7,7 @@ class Wizard:
 #This section creates some variables that will be required for the functioning of this class
 		self.canvas = canvas
 		self.health = 10
-		self.rect = pygame.Rect(150, 400, 150, 200)
+		self.rect = pygame.Rect(150, 300, 150, 200)
 		self.spells = []
 		self.timer = time.time()
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -18,7 +18,22 @@ class Wizard:
 		self.imagesLeft = [pygame.image.load("WizardLeft1.png"), pygame.image.load("WizardLeft2.png")]
 		self.index = 0
 		self.images = self.imagesLeft
+		self.jumping = False
+		self.jumpcount = 10
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
+	def parabela(self):
+		if self.jumpcount >= -10:
+			neg = 1
+			if self.jumpcount < 0:
+				neg = -1
+			self.rect.bottom -= int((self.jumpcount**2)*0.5*neg)
+			self.jumpcount -= 1
+		else:
+			if self.rect.bottom > 1090 and self.rect.bottom < 1110:
+				self.jumpcount = 0
+			else:
+				self.jumping = False
+				self.jumpcount = 10
 	def display(self):
 		self.canvas.blit(self.images[self.index], self.rect)
 		if time.time() - self.timer >= 0.3:
@@ -35,6 +50,8 @@ class Wizard:
 		if direction == 'front':
 			self.images = self.imagesFront
 	def move(self):
+		if self.jumping:
+			self.parabela()
 		if self.images == self.imagesFront:
 			return
 		if self.images == self.imagesRight:
@@ -53,7 +70,10 @@ def fileparser(filename):
 	pygame.display.set_caption("Pizza Wizard")
 	canvas.fill((255, 255, 255))
 	bg = pygame.image.load("Level1BG.png")
+	grass = pygame.image.load("Grass.png")
 	bgx = 0
+	maxdistance = 2
+	distance = 1
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This section takes all of the information from the file with the 'with' statement
 	try:
@@ -95,30 +115,48 @@ def fileparser(filename):
 		if bgx < 0:
 			canvas.blit(bg, (bgx + 1200, 0))
 		if bgx > 0:
-			canvas.blit(bg, (bgx - 1200, 0))
+			if distance != 1:
+				canvas.blit(bg, (bgx - 1200, 0))
 		if bgx in [1200, -1200]:
 			bgx = 0
 		wizard.display()
+		canvas.blit(grass, (0, 500))
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+#This section does all the keyboard event handling
 		for event in pygame.event.get():
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+#This section quits if needed
 			if event.type == QUIT:
 				pygame.quit()
 				sys.exit()
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+#This section turns the wizard
 			if event.type == KEYDOWN:
 				if event.key == K_LEFT:
 					wizard.turn('left')
 					dirchanged = True
-				else:
+				if event.key == K_RIGHT:
 					wizard.turn('right')
 					dirchanged = True
+				if event.key == K_SPACE:
+					wizard.jumping = True
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+#This section stops turning the wizard if the a key has been lifted
 			if event.type == KEYUP:
 				if event.key in [K_LEFT, K_RIGHT]:
 					dirchanged = False
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 		if not dirchanged:
 			wizard.turn('front')
 		if wizard.move() == 'left':
-			bgx += 12
+			if distance != 1:
+				bgx += 4
+			else:
+				if wizard.rect.left:
+					pass  #...
+				wizard.rect.right -= 4
 		if wizard.move() == 'right':
-			bgx -= 12
+			bgx -= 4
 		pygame.display.update()
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This section parses and runs the fileparser function on every single level
