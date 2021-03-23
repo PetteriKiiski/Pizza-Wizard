@@ -40,7 +40,7 @@ class Wizard:
 #This section displays the wizard, and changes the image every three tenth of a second
 	def display(self):
 		self.canvas.blit(self.images[self.index], self.rect)
-		if self.rect.left > 0:
+		if self.rect.left > 0 and self.rect.right < 1200:
 			if time.time() - self.timer >= 0.3:
 				self.timer = time.time()
 				if self.index:
@@ -194,5 +194,5 @@ def fileparser(filename):
 		pygame.display.update()
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This section parses and runs the fileparser function on every single level
-fileparser("water")
+fileparser("peterwater")
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
