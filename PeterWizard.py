@@ -40,7 +40,7 @@ class Wizard:
 #This section displays the wizard, and changes the image every three tenth of a second
 	def display(self):
 		self.canvas.blit(self.images[self.index], self.rect)
-		if self.rect.left > 0:
+		if self.rect.left > 0 and self.rect.right < 1200 and self.rect.bottom >= 507:
 			if time.time() - self.timer >= 0.3:
 				self.timer = time.time()
 				if self.index:
@@ -116,7 +116,7 @@ def fileparser(filename):
 			if co[1] == '4':
 				bg = pygame.image.load("Level4BG.png")
 		if co[0] == 'length':
-			maxlength = int(co[1])
+			maxdistance = int(co[1])
 	wizard = Wizard(canvas)
 	dirchanged = False
 	clock = pygame.time.Clock()
@@ -194,5 +194,5 @@ def fileparser(filename):
 		pygame.display.update()
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This section parses and runs the fileparser function on every single level
-fileparser("water")
+fileparser("peterwater")
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
