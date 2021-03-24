@@ -1,6 +1,6 @@
 import pygame, sys, time
 from pygame.locals import *
-#<<<<<<< HEAD
+print ('cow')
 #
 #class Monster:
 #	def __init__(self):
@@ -13,8 +13,6 @@ from pygame.locals import *
 #		pass
 #	def fly(self):
 #		pass
-#
-#=======
 #This class will be a parsing exception
 class ParseError:
 	def __init__(self):
@@ -69,7 +67,6 @@ class Ogre(Monster):
 		else:
 			raise ParseError
 #This class will contain all variables for the wizard
-#>>>>>>> b4df5cf9c85d0b78021defec64a8b6684da2943a
 class Wizard:
 	def __init__(self, canvas):
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
