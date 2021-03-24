@@ -1,6 +1,8 @@
 import pygame, sys, time
 from pygame.locals import *
 
+print ('test 2')
+
 class Wizard:
 	def __init__(self, canvas):
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -40,7 +42,7 @@ class Wizard:
 #This section displays the wizard, and changes the image every three tenth of a second
 	def display(self):
 		self.canvas.blit(self.images[self.index], self.rect)
-		if self.rect.left > 0:
+		if self.rect.left > 0 and self.rect.right < 1200 and self.rect.bottom >= 507:
 			if time.time() - self.timer >= 0.3:
 				self.timer = time.time()
 				if self.index:
@@ -116,7 +118,7 @@ def fileparser(filename):
 			if co[1] == '4':
 				bg = pygame.image.load("Level4BG.png")
 		if co[0] == 'length':
-			maxlength = int(co[1])
+			maxdistance = int(co[1])
 	wizard = Wizard(canvas)
 	dirchanged = False
 	clock = pygame.time.Clock()
@@ -163,7 +165,7 @@ def fileparser(filename):
 				if event.key == K_SPACE:
 					wizard.jumping = True
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This section stops turning the wizard if the a key has been lifted
+#This section stops turning the wizard if the key has been lifted
 			if event.type == KEYUP:
 				if event.key in [K_LEFT, K_RIGHT]:
 					dirchanged = False

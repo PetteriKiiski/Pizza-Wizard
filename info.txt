@@ -1,6 +1,6 @@
-Monster sizes
+#Monster sizes
 
-Monster name: width, height
+monster name: width, height
 
 ogre: 115, 145
 
@@ -12,8 +12,8 @@ dragon: 129, 179
 
 headphones: 119, 282
 
-bird: 164, 147
-
 spiral-eyes: 266, 283
 
-Wizard: 138, 193
+wizard: 138, 193
+
+progress-bar: 191, 45
