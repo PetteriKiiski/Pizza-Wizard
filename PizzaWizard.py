@@ -1,8 +1,18 @@
 import pygame, sys, time
 from pygame.locals import *
-#This class will contain all variables for the wizard
 
-print ('hey')
+class Monster:
+	def __init__(self):
+		pass
+	def walk(self):
+		pass
+	def jump(self):
+		pass
+	def roll(self):
+		pass
+	def fly(self):
+		pass
+
 class Wizard:
 	def __init__(self, canvas):
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -98,7 +108,6 @@ def fileparser(filename):
 	skaters = []
 	dragons = []
 	headphones = []
-	birds = []
 	canvas = pygame.display.set_mode((1200, 600))
 	pygame.display.set_caption("Pizza Wizard")
 	canvas.fill((255, 255, 255))
