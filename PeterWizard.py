@@ -7,7 +7,7 @@ class Wizard:
 #This section creates some variables that will be required for the functioning of this class
 		self.canvas = canvas
 		self.health = 10
-		self.rect = pygame.Rect(150, 307, 150, 200)
+		self.rect = pygame.Rect(150, 307, 138, 193)
 		self.spells = []
 		self.timer = time.time()
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ class Wizard:
 #This section displays the wizard, and changes the image every three tenth of a second
 	def display(self):
 		self.canvas.blit(self.images[self.index], self.rect)
-		if self.rect.left > 0 and self.rect.right < 1200 and self.rect.bottom >= 507:
+		if self.rect.left > 0 and self.rect.right < 1200 and not self.jumping:
 			if time.time() - self.timer >= 0.3:
 				self.timer = time.time()
 				if self.index:
@@ -76,9 +76,12 @@ class Wizard:
 def fileparser(filename):
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This section initializes a bunch of lists and variables needed from beginning to end in this function
-	spells = []
-	monster2s = []
-	monster1s = []
+	ogres = []
+	rotting_teeth = []
+	skaters = []
+	dragons = []
+	headphones = []
+	birds = []
 	canvas = pygame.display.set_mode((1200, 600))
 	pygame.display.set_caption("Pizza Wizard")
 	canvas.fill((255, 255, 255))
@@ -121,9 +124,11 @@ def fileparser(filename):
 	dirchanged = False
 	clock = pygame.time.Clock()
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
-	'''This section contains the while statement for the mainloop
+	'''
+	This section contains the while statement for the mainloop
 	ticks our little clock we defined three lines up
-	(if you count the comment) and displays everything'''
+	(if you count the comments) and displays everything
+	'''
 	while True:
 		clock.tick(50)
 		canvas.fill((255, 255, 255))
