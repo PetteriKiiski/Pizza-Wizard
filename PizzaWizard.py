@@ -9,6 +9,7 @@ class Wizard:
 #This section creates some variables that will be required for the functioning of this class
 		self.canvas = canvas
 		self.health = 10
+		self.healthImg = pygame.image.load("Bar{}.png".format(self.health))
 		self.rect = pygame.Rect(150, 307, 138, 193)
 		self.spells = []
 		self.timer = time.time()
@@ -25,6 +26,13 @@ class Wizard:
 		self.jumpcount = 10
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This function jumps in a parabela
+	def lose_health(self):
+		self.health -= 1
+		if self.health > 0:
+			self.healthImg = pygame.image.load("Bar{}.png".format(self.health))
+			return True
+		self.healthImg = pygame.image.load("HealthBar.png")
+		return False
 	def parabela(self):
 		if self.jumpcount >= -10:
 			neg = 1
@@ -42,6 +50,13 @@ class Wizard:
 #This section displays the wizard, and changes the image every three tenth of a second
 	def display(self):
 		self.canvas.blit(self.images[self.index], self.rect)
+		if self.rect.left-25 >= 0:
+			if self.rect.left+163 <= 1200:
+				self.canvas.blit(self.healthImg, (self.rect.left-25, self.rect.top - 60))
+			else:
+				self.canvas.blit(self.healthImg, (1009, self.rect.top - 60))
+		else:
+			self.canvas.blit(self.healthImg, (0, self.rect.top - 60))
 		if self.rect.left > 0 and self.rect.right < 1200 and not self.jumping:
 			if time.time() - self.timer >= 0.3:
 				self.timer = time.time()
@@ -169,6 +184,7 @@ def fileparser(filename):
 					dirchanged = True
 				if event.key == K_SPACE:
 					wizard.jumping = True
+					wizard.lose_health()
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This section stops turning the wizard if the a key has been lifted
 			if event.type == KEYUP:
@@ -201,5 +217,5 @@ def fileparser(filename):
 		pygame.display.update()
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This section parses and runs the fileparser function on every single level
-fileparser("peterwater")
+fileparser("water")
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
