@@ -1,5 +1,50 @@
 import pygame, sys, time
 from pygame.locals import *
+#This class will be a parsing exception
+class ParseError:
+	def __init__(self):
+		print ('cannot parse file')
+class NotImpmlementedError:pass
+#This class will be the base class for all the monsters
+class Monster:
+	def __init__(self, canvas, x, y, width, height, direction, bound1, bound2):
+		self.canvas = canvas
+		self.img = None
+		self.rect = pygame.Rect(x, y, width, height)
+		self.SeenWizard = False
+		self.direction = direction
+		self.bound1 = bound1
+		self.bound2 = bound2
+	def display(self):
+		if self.img is None:
+			raise NotImplementedError
+		if self.rect.right < 1200 or self.rect.left > 0:
+			self.canvas.blit(self.img)
+	def move(self, wizard):
+		if self.SeenWizard:
+			if self.rect.right < wizard.rect.left:
+				self.rect.right += 4
+			if self.rect.left > wizard.rect.right:
+				self.rect.right -= 4
+		else:
+			if self.direction == 'right':
+				self.rect.right += 4
+			if self.direction == 'left':
+				self.rect.left -= 4
+			if self.rect.left <= self.bound1:
+				self.direction = 'right'
+			if self.rect.right >= self.bound2:
+				self.direction = 'left'
+#This class will inherit from Monster and be the Ogre
+class Ogre(Monster):
+	def __init__(self, canvas, x, y, direction, bound1, bound2):
+		super().__init__(canvas, x, y, 115, 145, direction, bound1, bound2)
+		if direction.lower() == 'right':
+			self.img = pygame.image.load("Monster3Right.png")
+		elif direction.lower() == 'left':
+			self.img = pygame.image.load("Monster3Left.png")
+		else:
+			raise ParseError
 #This class will contain all variables for the wizard
 class Wizard:
 	def __init__(self, canvas):
@@ -117,13 +162,24 @@ def fileparser(filename):
 #This part parses the information we got from the previous section
 	coordinates = text.split('\n')
 	del coordinates[-1]
+	newco = []
+	for coordinate in coordinates[:]:
+		newco.append(coordinate.rstrip())
+	coordinates = newco[:]
 	separated_coordinates = []
 	for coordinate in coordinates:
 		separated_coordinates.append(coordinate.split(':'))
 	coordinates = separated_coordinates[:]
+	newco = []
+	for coordinate in coordinates[:]:
+		newco += [[]]
+		for co in coordinate:
+			newco[-1].append(co.split(',') if len(co.split(',')) > 1 else co)
+			print (co)
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This section uses the parsed data into sprites and also creates the wizard
 	for co in coordinates:
+#		print (co[1])
 		if co[0] == 'level':
 			if co[1] == '1':
 				continue
@@ -135,6 +191,8 @@ def fileparser(filename):
 				bg = pygame.image.load("Level4BG.png")
 		if co[0] == 'length':
 			maxdistance = int(co[1])
+		if co[0] == 'ogre':
+			ogres.append(Ogre(canvas, int(co[1][0]), int(co[1][1]), co[2], int(co[3][0]), int(co[3][1])))
 	wizard = Wizard(canvas)
 	dirchanged = False
 	clock = pygame.time.Clock()
@@ -162,6 +220,9 @@ def fileparser(filename):
 				distance += 1
 			bgx = 0
 		wizard.display()
+		for monster in ogres + rotting_teeth + skaters + headphones:
+			monster.move()
+			monster.display()
 		canvas.blit(grass, (0, 500))
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This section does all the keyboard event handling
@@ -182,7 +243,6 @@ def fileparser(filename):
 					dirchanged = True
 				if event.key == K_SPACE:
 					wizard.jumping = True
-					wizard.lose_health()
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 #This section stops turning the wizard if the a key has been lifted
 			if event.type == KEYUP:
