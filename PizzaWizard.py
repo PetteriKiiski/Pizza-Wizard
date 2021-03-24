@@ -1,6 +1,8 @@
 import pygame, sys, time
 from pygame.locals import *
 #This class will contain all variables for the wizard
+
+print ('hey')
 class Wizard:
 	def __init__(self, canvas):
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
