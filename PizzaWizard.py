@@ -1,18 +1,7 @@
 import pygame, sys, time
 from pygame.locals import *
 print ('cow')
-#
-#class Monster:
-#	def __init__(self):
-#		pass
-#	def walk(self):
-#		pass
-#	def jump(self):
-#		pass
-#	def roll(self):
-#		pass
-#	def fly(self):
-#		pass
+
 #This class will be a parsing exception
 class ParseError:
 	def __init__(self):
