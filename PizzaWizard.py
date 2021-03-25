@@ -4,80 +4,66 @@ from pygame.locals import *
 winWidth = 1200
 winHeight = 600
 canvas = pygame.display.set_mode((1200, 600))
-
-#This class will be a parsing exception
-class ParseError:
-	def __init__(self):
-		print ('cannot parse file')
+clock = pygame.time.Clock()
 
 class NotImpmlementedError:
 	pass
 
-#This class will be the base class for all the monsters
+#base class for all the monsters
 class Monster:
-	def __init__(self, imgsRight, imgsLeft, x, y, width, height, direction, bound1, bound2):
+	def __init__(self, imgsRight, imgsLeft, x, y, width, height, direction, speed):
 		self.index = 0
 		self.rect = pygame.Rect(x, y, width, height)
 		self.imgsRight = imgsRight
 		self.imgsLeft = imgsLeft
+		self.imgs = self.imgsRight if direction == 'right' else self.imgsLeft
 		self.SeenWizard = False
 		self.direction = direction
-		self.bound1 = bound1
-		self.bound2 = bound2
-
-		if direction.lower() == 'right':
-			self.img = pygame.image.load("Monster3Right.png")
-		elif direction.lower() == 'left':
-			self.img = pygame.image.load("Monster3Left.png")
-		else:
-			raise ParseError
+		self.timer = time.time()
+		self.speed = speed
 
 	def display(self):
-		if self.rect.right < winWidth or self.rect.left > 0:
-			canvas.blit(self.img, self.rect)
-	def move(self, wizard):
-		if self.SeenWizard:
-			if self.rect.right < wizard.rect.left:
-				self.rect.right += 4
-			if self.rect.left > wizard.rect.right:
-				self.rect.right -= 4
-		else:
-			if self.rect.left <= self.bound1:
-				self.direction = 'right'
-				self.img = pygame.image.load("Monster3Right.png")
-				self.rect.right += 4
+		if self.rect.left < winWidth and self.rect.right > 0:
+			self.SeenWizard = True
+			canvas.blit(self.imgs[self.index], self.rect)
 
-			elif self.rect.right >= self.bound2:
-				self.direction = 'left'
-				self.img = pygame.image.load("Monster3Left.png")
-				self.rect.left -= 4
-
-			if self.direction == None:
-				raise ParseError
-
-#it is lilja's duty to make an animation function so we LITERALLY DO NOT HAVE THE EXACT SAME CODE IN TWO PLACES!!!
-		if self.rect.left > 0 and self.rect.right < 1200:
+		if self.rect.left > 0 and self.rect.right < winWidth:
 			if time.time() - self.timer >= 0.3:
 				self.timer = time.time()
 				if self.index:
 					self.index = 0
 				else:
 					self.index = 1
+#used for walking, rolling, and moving
+	def move(self, wizard):
+		if self.SeenWizard:
+			if self.rect.right < wizard.rect.left:
+				self.rect.right += self.speed
+				self.imgs = self.imgsRight if self.direction == 'left' else self.imgsLeft
+			if self.rect.left > wizard.rect.right:
+				self.rect.right -= self.speed
+				self.imgs = self.imgsRight if self.direction == 'right' else self.imgsLeft
 
-#This class will contain all variables for the wizard
+
+#used for jumping
+	def jump(self):
+		pass
+
+#used for flying
+	def fly(self):
+		pass
+
 class Wizard:
 	def __init__(self):
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This section creates some variables that will be required for the functioning of this class
 		self.health = 10
 		self.healthImg = pygame.image.load("Bar{}.png".format(self.health))
 		self.rect = pygame.Rect(150, 307, 138, 193)
 		self.spells = []
 		self.timer = time.time()
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This section creates lists of two picture animations of the wizard and other variables for the animation to work
+		self.speed = 12
+
+#creates lists of two picture animations of the wizard and other variables for the animation to work
 		self.imagesFront = [pygame.image.load("WizardFront.png"), pygame.image.load("WizardFront.png")]
-		#For simplicity, in the list above, We just used the same image twice, so that we don't need to complicate things
 		self.imagesRight = [pygame.image.load("WizardRight1.png"), pygame.image.load("WizardRight2.png")]
 		self.imagesLeft = [pygame.image.load("WizardLeft1.png"), pygame.image.load("WizardLeft2.png")]
 		self.index = 0
@@ -85,8 +71,8 @@ class Wizard:
 		self.atboarder = False
 		self.jumping = False
 		self.jumpcount = 10
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This function jumps in a parabela
+
+#This function jumps in a parabola
 	def lose_health(self):
 		self.health -= 1
 		if self.health > 0:
@@ -107,25 +93,25 @@ class Wizard:
 			else:
 				self.jumping = False
 				self.jumpcount = 10
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This section displays the wizard, and changes the image every three tenth of a second
+
+#displays the wizard, and changes the image every three tenth of a second
 	def display(self):
 		canvas.blit(self.images[self.index], self.rect)
 		if self.rect.left-25 >= 0:
-			if self.rect.left+163 <= 1200:
+			if self.rect.left+163 <= winWidth:
 				canvas.blit(self.healthImg, (self.rect.left-25, self.rect.top - 60))
 			else:
 				canvas.blit(self.healthImg, (1009, self.rect.top - 60))
 		else:
 			canvas.blit(self.healthImg, (0, self.rect.top - 60))
-		if self.rect.left > 0 and self.rect.right < 1200 and not self.jumping:
+		if self.rect.left > 0 and self.rect.right < winWidth and not self.jumping:
 			if time.time() - self.timer >= 0.3:
 				self.timer = time.time()
 				if self.index:
 					self.index = 0
 				else:
 					self.index = 1
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
 #This function changes the animation images
 	def turn(self, direction):
 		if direction == 'right':
@@ -134,7 +120,7 @@ class Wizard:
 			self.images = self.imagesLeft
 		if direction == 'front':
 			self.images = self.imagesFront
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
 	def move(self):
 		'''
 		This section will move the wizard if he is supposed to jump
@@ -149,33 +135,31 @@ class Wizard:
 			return 'right'
 		if self.images == self.imagesLeft:
 			return 'left'
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This funcion will parse a file and play the level
+
+#this funcion will parse a file and play the level
 def fileparser(filename):
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This section initializes a bunch of lists and variables needed from beginning to end in this function
-	ogres = []
-	rotting_teeth = []
-	skaters = []
-	dragons = []
-	headphones = []
+
+#initializes a bunch of lists and variables needed from beginning to end in this function
+	monsters = []
 	pygame.display.set_caption("Pizza Wizard")
 	canvas.fill((255, 255, 255))
 	bg = pygame.image.load("Level1BG.png")
 	grass = pygame.image.load("Grass.png")
+	ogreRight = pygame.image.load("Monster3Right.png")
+	ogreLeft = pygame.image.load("Monster3Left.png")
 	bgx = 0
 	maxdistance = 2
 	distance = 1
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This section takes all of the information from the file with the 'with' statement
+
+#takes all of the information from the file with the 'with' statement
 	try:
 		with open(filename, 'rt') as fh:
 			text = fh.read()
 	except:
 		print ('Coordinate file cannot be read. Terminating')
 		sys.exit(1)
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This part parses the information we got from the previous section
+
+#parses the information we got from the previous section
 	coordinates = text.split('\n')
 	del coordinates[-1]
 	newco = []
@@ -193,10 +177,9 @@ def fileparser(filename):
 			newco[-1].append(co.split(',') if len(co.split(',')) > 1 else co)
 			print ('{0}:{1}'.format(co, co.split(',') if len(co.split(',')) > 1 else co))
 	coordinates = newco[:]
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This section uses the parsed data into sprites and also creates the wizard
+
+#uses the parsed data into sprites and also creates the wizard
 	for co in coordinates:
-#		print (co[1])
 		if co[0] == 'level':
 			if co[1] == '1':
 				continue
@@ -209,50 +192,49 @@ def fileparser(filename):
 		if co[0] == 'length':
 			maxdistance = int(co[1])
 		if co[0] == 'ogre':
-			print (co)
+			monsters += [Monster([ogreRight, ogreRight], [ogreLeft, ogreLeft], int(co[1][0]), int(co[1][1]), 115, 145, co[2], 4)]
 
-			ogres.append(Ogre(canvas, int(co[1][0]), int(co[1][1]), co[2], int(co[3][0]), int(co[3][1])))
+
 	wizard = Wizard()
-	dirchanged = False
-	clock = pygame.time.Clock()
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
+	dirchanged = False #direction changed
+
 	'''
 	This section contains the while statement for the mainloop
-	ticks our little clock we defined three lines up
-	(if you count the comments) and displays everything
+	and ticks our little baby clock we defined at the top
+	 and displays everything
 	'''
 	while True:
 		clock.tick(50)
 		canvas.fill((255, 255, 255))
 		canvas.blit(bg, (bgx, 0))
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
 #This function makes it an infinity background until it reaches the end or the beginning
 		if bgx < 0:
-			canvas.blit(bg, (bgx + 1200, 0))
+			canvas.blit(bg, (bgx + winWidth, 0))
 		if bgx > 0:
 			if distance != 1:
-				canvas.blit(bg, (bgx - 1200, 0))
-		if bgx in [1200, -1200]:
-			if bgx == 1200:
+				canvas.blit(bg, (bgx - winWidth, 0))
+		if bgx in [winWidth, -winWidth]:
+			if bgx == winWidth:
 				distance -= 1
-			if bgx == -1200:
+			if bgx == -winWidth:
 				distance += 1
 			bgx = 0
 		wizard.display()
-		for monster in ogres + rotting_teeth + skaters + headphones:
+		for monster in monsters:
 			monster.move(wizard)
 			monster.display()
 		canvas.blit(grass, (0, 500))
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This section does all the keyboard event handling
+
+#keyboard event handling
 		for event in pygame.event.get():
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This section quits if needed
+
+#quits if needed
 			if event.type == QUIT:
 				pygame.quit()
 				sys.exit()
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This section turns the wizard
+
+#turns the wizard
 			if event.type == KEYDOWN:
 				if event.key == K_LEFT:
 					wizard.turn('left')
@@ -262,37 +244,52 @@ def fileparser(filename):
 					dirchanged = True
 				if event.key == K_SPACE:
 					wizard.jumping = True
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This section stops turning the wizard if the a key has been lifted
+
+#stops turning the wizard if the a key has been lifted
 			if event.type == KEYUP:
 				if event.key in [K_LEFT, K_RIGHT]:
 					dirchanged = False
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
 		if not dirchanged:
 			wizard.turn('front')
 		if wizard.move() == 'left':
 			if bgx != 0 and wizard.rect.left == 150:
-				bgx += 12
+				bgx += wizard.speed
+				for monster in monsters:
+					monster.rect.right -= wizard.speed
 			elif distance != 1 and wizard.rect.left == 150:
-				bgx += 12
+				bgx += wizard.speed
+				for monster in monsters:
+					monster.rect.right -= wizard.speed
 			else:
 				if wizard.rect.left > 0:
-					wizard.rect.right -= 12
+					wizard.rect.right -= wizard.speed
+					for monster in monsters:
+						monster.rect.right -= wizard.speed
 				else:
 					wizard.move()
+					for monster in monsters:
+						monster.rect.right -= wizard.speed
 		if wizard.move() == 'right':
 			if bgx != 0 and wizard.rect.left == 150:
-				bgx -= 12
+				bgx -= wizard.speed
+				for monster in monsters:
+					monster.rect.left += wizard.speed
 			elif distance != maxdistance and wizard.rect.left == 150:
-				bgx -= 12
+				bgx -= wizard.speed
+				for monster in monsters:
+					monster.rect.left += wizard.speed
 			else:
 				if wizard.rect.left < 150:
-					wizard.rect.right += 12
+					wizard.rect.right += wizard.speed
+					for monster in monsters:
+						monster.rect.left -= wizard.speed
 				else:
-					if wizard.rect.right < 1200:
-						wizard.rect.right += 12
+					if wizard.rect.right < winWidth:
+						wizard.rect.right += wizard.speed
+						for monster in monsters:
+							monster.rect.left -= wizard.speed
 		pygame.display.update()
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-#This section parses and runs the fileparser function on every single level
+
+#parses and runs the fileparser function on every single level
 fileparser("water")
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
