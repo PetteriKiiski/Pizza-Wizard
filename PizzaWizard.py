@@ -51,6 +51,9 @@ class Monster:
 			if self.rect.left > wizard.rect.right:
 				self.rect.right -= self.speed
 				self.imgs = self.imgsRight if self.direction == 'right' else self.imgsLeft
+	def jump(self):pass
+
+	def fly(self):pass
 
 class Wizard:
 	def __init__(self):
