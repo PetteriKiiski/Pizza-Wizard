@@ -21,15 +21,15 @@ class Bullet:
 		self.orig_x = orig_x
 		self.slope = slope
 		self.height = height #Note: if you think of the y=mx+b function, self.height is the b
-		self.rect = pygame.rect(get_coordinates()[0], get_coordinates()[1], 100, 50)
+		self.rect = pygame.Rect(self.get_coordinates()[0], self.get_coordinates()[1], 100, 50)
 		self.active = True
 	def display(self):
 		pass
 	def get_coordinates(self):
-		return (self.slope * self.orig_x + self.height, self.orig_x)
+		return (-1 * (int(self.slope * self.orig_x + self.height)), int(self.orig_x))
 	def move(self):
 		self.orig_x += self.direction
-		self.rect = pygame.rect(get_coordinates()[0], get_coordinates()[1], 100, 50)
+		self.rect = pygame.Rect(get_coordinates()[0], get_coordinates()[1], 100, 50)
 #class for all the monsters
 class Monster:
 	def __init__(self, imgsRight, imgsLeft, x, y, width, height, direction, speed):
@@ -44,28 +44,28 @@ class Monster:
 		self.timer = time.time()
 		self.speed = speed
 
-	def display(self):
+	def display(self, wizard):
 		if self.rect.left < winWidth and self.rect.right > 0:
 			self.SeenWizard = True
 			canvas.blit(self.imgs[self.index], self.rect)
 
 		if self.rect.left > 0 and self.rect.right < winWidth:
 			if time.time() - self.timer >= 0.3:
-				times += 1
+				self.times += 1
 				self.timer = time.time()
 				if self.index:
 					self.index = 0
 				else:
 					self.index = 1
-			if times == 3:
-				self.shoot_bullet()
+			if self.times == 3 and self.SeenWizard:
+				self.shoot_bullet(wizard)
 #used for walking, rolling, and moving
 	def move(self, wizard):
 		if self.SeenWizard:
-			if self.rect.right < wizard.rect.left:
+			if self.rect.right <= wizard.rect.left:
 				self.rect.right += self.speed
 				self.imgs = self.imgsRight if self.direction == 'left' else self.imgsLeft
-			if self.rect.left > wizard.rect.right:
+			if self.rect.left >= wizard.rect.right:
 				self.rect.right -= self.speed
 				self.imgs = self.imgsRight if self.direction == 'right' else self.imgsLeft
 	def jump(self):pass
@@ -74,14 +74,15 @@ class Monster:
 
 	def shoot_bullet(self, wizard):
 		if self.direction == 'left':
-			point1 = (self.rect.left, self.rect.centery)
+			point1 = (self.rect.left-100, self.rect.centery)
 			direction = -15
 		else:
-			point1 = (self.rect.right, self.rect.centery)
+			point1 = (self.rect.right+100, self.rect.centery)
 			direction = 15
 		point2 = (wizard.rect.centerx, wizard.rect.centery)
-		bullets.append(Bullet(direction, point1)) #CONTINUE HERE
-direction:int, orig_x:int, slope:int, height:int, strength:int
+		slope = abs(point1[1] - point2[1]) / abs(point1[0] - point2[0])
+		height = point1[1] - point1[0] * slope
+		bullets.append(Bullet(direction, point1[0], slope, height, 1))
 class Wizard:
 	def __init__(self):
 		self.health = 10
@@ -90,13 +91,15 @@ class Wizard:
 		self.spells = []
 		self.timer = time.time()
 		self.speed = 12
+		self.Dead = False
 
 #creates lists of two picture animations of the wizard and other variables for the animation to work
 		self.imagesFront = [pygame.image.load("WizardFront.png"), pygame.image.load("WizardFront.png")]
 		self.imagesRight = [pygame.image.load("WizardRight1.png"), pygame.image.load("WizardRight2.png")]
 		self.imagesLeft = [pygame.image.load("WizardLeft1.png"), pygame.image.load("WizardLeft2.png")]
+		self.imagesDead = [pygame.image.load("WizardDead.png"), pygame.image.load("WizardDead.png")]
 		self.index = 0
-		self.images = self.imagesLeft
+		self.images = self.imagesFront
 		self.atboarder = False
 		self.jumping = False
 		self.jumpcount = 10
@@ -106,9 +109,10 @@ class Wizard:
 		self.health -= 1
 		if self.health > 0:
 			self.healthImg = pygame.image.load("Bar{}.png".format(self.health))
-			return True
+			return
 		self.healthImg = pygame.image.load("HealthBar.png")
-		return False
+		self.images = self.imagesDead
+		self.Dead = True
 	def parabela(self):
 		if self.jumpcount >= -10:
 			neg = 1
@@ -143,12 +147,13 @@ class Wizard:
 
 #This function changes the animation images
 	def turn(self, direction):
-		if direction == 'right':
-			self.images = self.imagesRight
-		if direction == 'left':
-			self.images = self.imagesLeft
-		if direction == 'front':
-			self.images = self.imagesFront
+		if not self.Dead:
+			if direction == 'right':
+				self.images = self.imagesRight
+			if direction == 'left':
+				self.images = self.imagesLeft
+			if direction == 'front':
+				self.images = self.imagesFront
 
 	def move(self):
 		'''
@@ -158,6 +163,8 @@ class Wizard:
 		'''
 		if self.jumping:
 			self.parabela()
+		if self.Dead:
+			return
 		if self.images == self.imagesFront:
 			return
 		if self.images == self.imagesRight:
@@ -178,6 +185,10 @@ def fileparser(filename):
 	grass = pygame.image.load("Grass.png")
 	ogreRight = pygame.image.load("Monster3Right.png")
 	ogreLeft = pygame.image.load("Monster3Left.png")
+	rottingRight = pygame.image.load("Monster2Right.png")
+	rottingLeft = pygame.image.load("Monster2Left.png")
+	skatingRight = pygame.image.load("Monster1Right.png")
+	skatingLeft = pygame.image.load("Monster1Left.png")
 	bgx = 0
 	maxdistance = 2
 	distance = 1
@@ -206,7 +217,6 @@ def fileparser(filename):
 		newco += [[]]
 		for co in coordinate:
 			newco[-1].append(co.split(',') if len(co.split(',')) > 1 else co)
-			print ('{0}:{1}'.format(co, co.split(',') if len(co.split(',')) > 1 else co))
 	coordinates = newco[:]
 
 #uses the parsed data into sprites and also creates the wizard
@@ -224,7 +234,11 @@ def fileparser(filename):
 			maxdistance = int(co[1])
 		if co[0] == 'ogre':
 			monsters += [Monster([ogreRight, ogreRight], [ogreLeft, ogreLeft], int(co[1][0]), int(co[1][1]), 115, 145, co[2], 4)]
-
+		if co[0] == 'rotting':
+			monsters += [Monster([rottingLeft, rottingLeft], [rottingRight, rottingRight], int(co[1][0]), int(co[1][1]), 133, 144, co[2], 6)]
+		if co[0] == 'skating':
+			monsters += [Monster([skatingRight, skatingRight], [skatingLeft, skatingLeft], int(co[1][0]), int(co[1][1]), 147, 145, co[2], 8)]
+#imgsRight, imgsLeft, x, y, width, height, direction, speed
 
 	wizard = Wizard()
 	dirchanged = False #direction changed
@@ -256,7 +270,7 @@ def fileparser(filename):
 		wizard.display()
 		for monster in monsters:
 			monster.move(wizard)
-			monster.display()
+			monster.display(wizard)
 		canvas.blit(grass, (0, 500))
 
 #keyboard event handling
@@ -267,25 +281,26 @@ def fileparser(filename):
 				pygame.quit()
 				sys.exit()
 
-#turns the wizard
-			if event.type == KEYDOWN:
-				if event.key == K_LEFT:
-					wizard.turn('left')
-					dirchanged = True
-				if event.key == K_RIGHT:
-					wizard.turn('right')
-					dirchanged = True
-				if event.key == K_SPACE:
-					wizard.jumping = True
+#turns the wizard if its not dead
+			if not wizard.Dead:
+				if event.type == KEYDOWN:
+					if event.key == K_LEFT:
+						wizard.turn('left')
+						dirchanged = True
+					if event.key == K_RIGHT:
+						wizard.turn('right')
+						dirchanged = True
+					if event.key == K_SPACE:
+						wizard.jumping = True
 
 #stops turning the wizard if the a key has been lifted
-			if event.type == KEYUP:
-				if event.key in [K_LEFT, K_RIGHT]:
-					dirchanged = False
+				if event.type == KEYUP:
+					if event.key in [K_LEFT, K_RIGHT]:
+						dirchanged = False
 		if not dirchanged:
 			wizard.turn('front')
 #Moves the background or the wizard, whichever is needed
-		if wizard.move() == 'left':
+		if wizard.move() == 'left' and not wizard.Dead:
 			if bgx != 0 and wizard.rect.left == 150:
 				bgx += wizard.speed
 				for monster in monsters:
@@ -295,14 +310,16 @@ def fileparser(filename):
 				for monster in monsters:
 					monster.rect.right += wizard.speed
 			else:
-				if wizard.rect.left > 0:
+				if wizard.rect.left > 150:
 					wizard.rect.right -= wizard.speed
 				else:
-					wizard.move()
-					for monster in monsters:
-						monster.rect.right += wizard.speed
+					if wizard.rect.left > 0:
+						wizard.rect.right -= wizard.speed
+#					wizard.move()
+#					for monster in monsters:
+#						monster.rect.right += wizard.speed
 
-		if wizard.move() == 'right':
+		if wizard.move() == 'right' and not wizard.Dead:
 			if bgx != 0 and wizard.rect.left == 150:
 				bgx -= wizard.speed
 				for monster in monsters:
@@ -314,8 +331,6 @@ def fileparser(filename):
 			else:
 				if wizard.rect.left < 150:
 					wizard.rect.right += wizard.speed
-					for monster in monsters:
-						monster.rect.left += wizard.speed
 				else:
 					if wizard.rect.right < winWidth:
 						wizard.rect.right += wizard.speed
