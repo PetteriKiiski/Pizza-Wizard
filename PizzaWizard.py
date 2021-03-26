@@ -51,14 +51,14 @@ class Monster:
 
 		if self.rect.left > 0 and self.rect.right < winWidth:
 			if time.time() - self.timer >= 0.3:
-				times += 1
+#				self.times += 1
 				self.timer = time.time()
 				if self.index:
 					self.index = 0
 				else:
 					self.index = 1
-			if times == 3:
-				self.shoot_bullet()
+#			if self.times == 3:
+#				self.shoot_bullet()
 #used for walking, rolling, and moving
 	def move(self, wizard):
 		if self.SeenWizard:
@@ -81,7 +81,7 @@ class Monster:
 			direction = 15
 		point2 = (wizard.rect.centerx, wizard.rect.centery)
 		bullets.append(Bullet(direction, point1)) #CONTINUE HERE
-direction:int, orig_x:int, slope:int, height:int, strength:int
+
 class Wizard:
 	def __init__(self):
 		self.health = 10
