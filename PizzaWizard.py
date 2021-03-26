@@ -1,6 +1,6 @@
 import pygame, sys, time
 from pygame.locals import *
-
+#LINE 83
 #This class will be a parsing exception
 class ParseError:
 	def __init__(self):
@@ -13,14 +13,28 @@ winWidth = 1200
 winHeight = 600
 canvas = pygame.display.set_mode((1200, 600))
 clock = pygame.time.Clock()
-
-class NotImpmlementedError:
-	pass
-
-#base class for all the monsters
+#class for the bullets that the monsters launch
+class Bullet:
+	#Initializer function needs some mathematical variables to be able to point to the wizard
+	def __init__(self, direction:int, orig_x:int, slope:int, height:int, strength:int):
+		self.direction = direction
+		self.orig_x = orig_x
+		self.slope = slope
+		self.height = height #Note: if you think of the y=mx+b function, self.height is the b
+		self.rect = pygame.rect(get_coordinates()[0], get_coordinates()[1], 100, 50)
+		self.active = True
+	def display(self):
+		pass
+	def get_coordinates(self):
+		return (self.slope * self.orig_x + self.height, self.orig_x)
+	def move(self):
+		self.orig_x += self.direction
+		self.rect = pygame.rect(get_coordinates()[0], get_coordinates()[1], 100, 50)
+#class for all the monsters
 class Monster:
 	def __init__(self, imgsRight, imgsLeft, x, y, width, height, direction, speed):
 		self.index = 0
+		self.times = 0
 		self.rect = pygame.Rect(x, y, width, height)
 		self.imgsRight = imgsRight
 		self.imgsLeft = imgsLeft
@@ -37,11 +51,14 @@ class Monster:
 
 		if self.rect.left > 0 and self.rect.right < winWidth:
 			if time.time() - self.timer >= 0.3:
+				times += 1
 				self.timer = time.time()
 				if self.index:
 					self.index = 0
 				else:
 					self.index = 1
+			if times == 3:
+				self.shoot_bullet()
 #used for walking, rolling, and moving
 	def move(self, wizard):
 		if self.SeenWizard:
@@ -55,6 +72,16 @@ class Monster:
 
 	def fly(self):pass
 
+	def shoot_bullet(self, wizard):
+		if self.direction == 'left':
+			point1 = (self.rect.left, self.rect.centery)
+			direction = -15
+		else:
+			point1 = (self.rect.right, self.rect.centery)
+			direction = 15
+		point2 = (wizard.rect.centerx, wizard.rect.centery)
+		bullets.append(Bullet(direction, point1)) #CONTINUE HERE
+direction:int, orig_x:int, slope:int, height:int, strength:int
 class Wizard:
 	def __init__(self):
 		self.health = 10
@@ -142,7 +169,9 @@ class Wizard:
 def fileparser(filename):
 
 #initializes a bunch of lists and variables needed from beginning to end in this function
+	global bullets
 	monsters = []
+	bullets = []
 	pygame.display.set_caption("Pizza Wizard")
 	canvas.fill((255, 255, 255))
 	bg = pygame.image.load("Level1BG.png")
