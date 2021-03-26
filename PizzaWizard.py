@@ -18,7 +18,6 @@ class NotImpmlementedError:
 	pass
 
 #base class for all the monsters
-
 class Monster:
 	def __init__(self, imgsRight, imgsLeft, x, y, width, height, direction, speed):
 		self.index = 0
@@ -203,6 +202,8 @@ def fileparser(filename):
 	and ticks our little baby clock we defined at the top
 	 and displays everything
 	'''
+	Dying = False
+	started_dying = time.time()
 	while True:
 		clock.tick(50)
 		canvas.fill((255, 255, 255))
@@ -249,9 +250,9 @@ def fileparser(filename):
 			if event.type == KEYUP:
 				if event.key in [K_LEFT, K_RIGHT]:
 					dirchanged = False
-
 		if not dirchanged:
 			wizard.turn('front')
+#Moves the background or the wizard, whichever is needed
 		if wizard.move() == 'left':
 			if bgx != 0 and wizard.rect.left == 150:
 				bgx += wizard.speed
@@ -286,7 +287,15 @@ def fileparser(filename):
 				else:
 					if wizard.rect.right < winWidth:
 						wizard.rect.right += wizard.speed
+#If the wizard hits a monster, it loses health
+		for monster in monsters:
+			if monster.rect.colliderect(wizard.rect) and not Dying:
+				started_dying = time.time()
+				wizard.lose_health()
+				Dying = True
+				break
+		if Dying and time.time() - started_dying > 1:
+			Dying = False
 		pygame.display.update()
-
 #parses and runs the fileparser function on every single level
 fileparser("water")
