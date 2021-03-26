@@ -4,8 +4,8 @@ from pygame.locals import *
 #This class will be a parsing exception
 class ParseError:
 	def __init__(self):
-
 		print ('cannot parse file')
+
 class NotImpmlementedError:pass
 #This class will be the base class for all the monsters
 
