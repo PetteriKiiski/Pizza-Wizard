@@ -4,7 +4,7 @@ monster name: width, height
 
 #ogre: 115, 145
 
-rotting-teeth: 133, 144
+#rotting-teeth: 133, 144
 
 skater: 147, 145
 

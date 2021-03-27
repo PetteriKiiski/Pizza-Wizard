@@ -21,20 +21,20 @@ class Bullet:
 		self.orig_x = orig_x
 		self.slope = slope
 		self.height = height #Note: if you think of the y=mx+b function, self.height is the b
-		self.rect = pygame.Rect(self.get_coordinates()[0], self.get_coordinates()[1], 100, 50)
+		self.rect = pygame.Rect(self.get_coordinates()[0], 1200 - self.get_coordinates()[1], 50, 25)
 		self.active = True
 	def display(self):
-		pass
+		pygame.draw.ellipse(canvas, (0, 0, 0), self.rect)
 	def get_coordinates(self):
-		return (-1 * (int(self.slope * self.orig_x + self.height)), int(self.orig_x))
+		return (int(self.orig_x), (int(self.slope * self.orig_x + self.height)))
 	def move(self):
 		self.orig_x += self.direction
-		self.rect = pygame.Rect(get_coordinates()[0], get_coordinates()[1], 100, 50)
+		self.rect = pygame.Rect(self.get_coordinates()[0], self.get_coordinates()[1], 100, 50)
 #class for all the monsters
 class Monster:
 	def __init__(self, imgsRight, imgsLeft, x, y, width, height, direction, speed):
 		self.index = 0
-		self.times = 0
+		self.shoot = time.time()
 		self.rect = pygame.Rect(x, y, width, height)
 		self.imgsRight = imgsRight
 		self.imgsLeft = imgsLeft
@@ -51,13 +51,13 @@ class Monster:
 
 		if self.rect.left > 0 and self.rect.right < winWidth:
 			if time.time() - self.timer >= 0.3:
-				self.times += 1
 				self.timer = time.time()
 				if self.index:
 					self.index = 0
 				else:
 					self.index = 1
-			if self.times == 3 and self.SeenWizard:
+			if time.time() - self.shoot and self.SeenWizard:
+				self.shoot = time.time()
 				self.shoot_bullet(wizard)
 #used for walking, rolling, and moving
 	def move(self, wizard):
@@ -74,15 +74,17 @@ class Monster:
 
 	def shoot_bullet(self, wizard):
 		if self.direction == 'left':
-			point1 = (self.rect.left-100, self.rect.centery)
+			point1 = (self.rect.left, self.rect.top)
 			direction = -15
 		else:
-			point1 = (self.rect.right+100, self.rect.centery)
+			point1 = (self.rect.right, self.rect.top)
 			direction = 15
-		point2 = (wizard.rect.centerx, wizard.rect.centery)
-		slope = abs(point1[1] - point2[1]) / abs(point1[0] - point2[0])
-		height = point1[1] - point1[0] * slope
+		point2 = (wizard.rect.centerx, wizard.rect.bottom - wizard.rect.height / 2)
+		slope = (abs(point1[1] - point2[1]) / abs(point1[0] - point2[0]))
+		height = point1[1] + point1[0] * slope
+#		print (int(slope * (point1[0]+direction) + height))
 		bullets.append(Bullet(direction, point1[0], slope, height, 1))
+#direction:int, orig_x:int, slope:int, height:int, strength:int
 class Wizard:
 	def __init__(self):
 		self.health = 10
@@ -272,6 +274,14 @@ def fileparser(filename):
 			monster.move(wizard)
 			monster.display(wizard)
 		canvas.blit(grass, (0, 500))
+		for bullet in bullets[:]:
+			if bullet.rect.right <= 0 or bullet.rect.left >= winWidth or bullet.rect.top >= winHeight or bullet.rect.bottom <= 0:
+				print ('DELETING')
+				print (bullet.rect)
+				del bullets[bullets.index(bullet)]
+				continue
+			bullet.move()
+			bullet.display()
 
 #keyboard event handling
 		for event in pygame.event.get():
