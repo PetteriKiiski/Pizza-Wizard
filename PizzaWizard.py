@@ -1,6 +1,6 @@
 import pygame, sys, time
 from pygame.locals import *
-#LINE 83
+
 #This class will be a parsing exception
 class ParseError:
 	def __init__(self):
@@ -16,7 +16,7 @@ clock = pygame.time.Clock()
 #class for the bullets that the monsters launch
 class Bullet:
 	#Initializer function needs some mathematical variables to be able to point to the wizard
-	def __init__(self, direction:int, orig_x:int, slope:int, height:int, strength:int):
+	def __init__(self, img, direction:int, orig_x:int, slope:int, height:int, strength:int):
 		self.direction = direction
 		self.orig_x = orig_x
 		self.slope = slope
@@ -30,6 +30,15 @@ class Bullet:
 	def move(self):
 		self.orig_x += self.direction
 		self.rect = pygame.Rect(get_coordinates()[0], get_coordinates()[1], 100, 50)
+
+class Magic:
+	def __init__(self, img):
+		self.img = img
+	def display(self):
+		pass
+	def get_coordinates(self):
+		pass
+
 #class for all the monsters
 class Monster:
 	def __init__(self, imgsRight, imgsLeft, x, y, width, height, direction, speed):
@@ -250,6 +259,7 @@ def fileparser(filename):
 	'''
 	Dying = False
 	started_dying = time.time()
+
 	while True:
 		clock.tick(50)
 		canvas.fill((255, 255, 255))
@@ -287,11 +297,16 @@ def fileparser(filename):
 					if event.key == K_LEFT:
 						wizard.turn('left')
 						dirchanged = True
+
 					if event.key == K_RIGHT:
 						wizard.turn('right')
 						dirchanged = True
+
 					if event.key == K_SPACE:
 						wizard.jumping = True
+
+					if event.key == K_RCTRL or event.key == K_LCTRL:
+						pass
 
 #stops turning the wizard if the a key has been lifted
 				if event.type == KEYUP:
@@ -344,5 +359,6 @@ def fileparser(filename):
 		if Dying and time.time() - started_dying > 1:
 			Dying = False
 		pygame.display.update()
+
 #parses and runs the fileparser function on every single level
 fileparser("water")
