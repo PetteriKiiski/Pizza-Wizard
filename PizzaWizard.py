@@ -1,6 +1,6 @@
 import pygame, sys, time
 from pygame.locals import *
-#LINE 83
+
 #This class will be a parsing exception
 class ParseError:
 	def __init__(self):
@@ -16,24 +16,37 @@ clock = pygame.time.Clock()
 #class for the bullets that the monsters launch
 class Bullet:
 	#Initializer function needs some mathematical variables to be able to point to the wizard
-	def __init__(self, direction:int, orig_x:int, slope:int, height:int, strength:int):
+	def __init__(self, width, img, direction:int, orig_x:int, slope:int, height:int, strength:int):
+		self.width = width
 		self.direction = direction
+		self.img = img
 		self.orig_x = orig_x
 		self.slope = slope
 		self.height = height #Note: if you think of the y=mx+b function, self.height is the b
-		self.rect = pygame.Rect(self.get_coordinates()[0], 1200 - self.get_coordinates()[1], 50, 25)
 		self.active = True
 	def display(self):
-		pygame.draw.ellipse(canvas, (0, 0, 0), self.rect)
+		canvas.blit(self.img, self.get_coordinates())
 	def get_coordinates(self):
 		return (int(self.orig_x), (int(self.slope * self.orig_x + self.height)))
 	def move(self):
 		self.orig_x += self.direction
-		self.rect = pygame.Rect(self.get_coordinates()[0], self.get_coordinates()[1], 100, 50)
+	def rect(self):
+		return pygame.Rect(*self.get_coordinates(), 80, self.width)
+class Magic:
+	def __init__(self, img):
+		self.img = img
+	def display(self):
+		pass
+	def get_coordinates(self):
+		pass
+
 #class for all the monsters
 class Monster:
-	def __init__(self, imgsRight, imgsLeft, x, y, width, height, direction, speed):
+	def __init__(self, bullet_width, bullet_img, imgsRight, imgsLeft, x, y, width, height, direction, speed):
 		self.index = 0
+		self.bullet_width = bullet_width
+		self.bullet_img_left = pygame.image.load(bullet_img[0])
+		self.bullet_img_right = pygame.image.load(bullet_img[1])
 		self.shoot = time.time()
 		self.rect = pygame.Rect(x, y, width, height)
 		self.imgsRight = imgsRight
@@ -56,23 +69,27 @@ class Monster:
 					self.index = 0
 				else:
 					self.index = 1
-			if time.time() - self.shoot and self.SeenWizard:
+			if time.time() - self.shoot > 3 and self.SeenWizard:
 				self.shoot = time.time()
-				self.shoot_bullet(wizard)
+				if not wizard.Dead:
+					self.shoot_bullet(wizard)
 #used for walking, rolling, and moving
 	def move(self, wizard):
 		if self.SeenWizard:
 			if self.rect.right <= wizard.rect.left:
+				self.direction = 'right'
 				self.rect.right += self.speed
-				self.imgs = self.imgsRight if self.direction == 'left' else self.imgsLeft
+				self.imgs = self.imgsRight
 			if self.rect.left >= wizard.rect.right:
+				self.direction = 'left'
 				self.rect.right -= self.speed
-				self.imgs = self.imgsRight if self.direction == 'right' else self.imgsLeft
+				self.imgs = self.imgsRight
 	def jump(self):pass
 
 	def fly(self):pass
 
 	def shoot_bullet(self, wizard):
+		print (self.direction)
 		if self.direction == 'left':
 			point1 = (self.rect.left, self.rect.top)
 			direction = -15
@@ -83,7 +100,7 @@ class Monster:
 		slope = (abs(point1[1] - point2[1]) / abs(point1[0] - point2[0]))
 		height = point1[1] + point1[0] * slope
 #		print (int(slope * (point1[0]+direction) + height))
-		bullets.append(Bullet(direction, point1[0], slope, height, 1))
+		bullets.append(Bullet(self.bullet_width, self.bullet_img_right if direction > 0 else self.bullet_img_left, direction, point1[0], slope, height, 1))
 #direction:int, orig_x:int, slope:int, height:int, strength:int
 class Wizard:
 	def __init__(self):
@@ -235,11 +252,11 @@ def fileparser(filename):
 		if co[0] == 'length':
 			maxdistance = int(co[1])
 		if co[0] == 'ogre':
-			monsters += [Monster([ogreRight, ogreRight], [ogreLeft, ogreLeft], int(co[1][0]), int(co[1][1]), 115, 145, co[2], 4)]
+			monsters += [Monster(30, ['Bullet2Left.png', 'Bullet1Right.png'], [ogreRight, ogreRight], [ogreLeft, ogreLeft], int(co[1][0]), int(co[1][1]), 115, 145, co[2], 4)]
 		if co[0] == 'rotting':
-			monsters += [Monster([rottingLeft, rottingLeft], [rottingRight, rottingRight], int(co[1][0]), int(co[1][1]), 133, 144, co[2], 6)]
+			monsters += [Monster(30, ['Bullet2Left.png', 'Bullet2Right.png'], [rottingLeft, rottingLeft], [rottingRight, rottingRight], int(co[1][0]), int(co[1][1]), 133, 144, co[2], 6)]
 		if co[0] == 'skating':
-			monsters += [Monster([skatingRight, skatingRight], [skatingLeft, skatingLeft], int(co[1][0]), int(co[1][1]), 147, 145, co[2], 8)]
+			monsters += [Monster(40, ['Bullet1Left.png', 'Bullet2Right.png'], [skatingRight, skatingRight], [skatingLeft, skatingLeft], int(co[1][0]), int(co[1][1]), 147, 145, co[2], 8)]
 #imgsRight, imgsLeft, x, y, width, height, direction, speed
 
 	wizard = Wizard()
@@ -252,6 +269,7 @@ def fileparser(filename):
 	'''
 	Dying = False
 	started_dying = time.time()
+
 	while True:
 		clock.tick(50)
 		canvas.fill((255, 255, 255))
@@ -275,9 +293,8 @@ def fileparser(filename):
 			monster.display(wizard)
 		canvas.blit(grass, (0, 500))
 		for bullet in bullets[:]:
-			if bullet.rect.right <= 0 or bullet.rect.left >= winWidth or bullet.rect.top >= winHeight or bullet.rect.bottom <= 0:
+			if bullet.rect().right <= 0 or bullet.rect().left >= winWidth or bullet.rect().top >= winHeight or bullet.rect().bottom <= 0:
 				print ('DELETING')
-				print (bullet.rect)
 				del bullets[bullets.index(bullet)]
 				continue
 			bullet.move()
@@ -297,11 +314,16 @@ def fileparser(filename):
 					if event.key == K_LEFT:
 						wizard.turn('left')
 						dirchanged = True
+
 					if event.key == K_RIGHT:
 						wizard.turn('right')
 						dirchanged = True
+
 					if event.key == K_SPACE:
 						wizard.jumping = True
+
+					if event.key == K_RCTRL or event.key == K_LCTRL:
+						pass
 
 #stops turning the wizard if the a key has been lifted
 				if event.type == KEYUP:
@@ -354,5 +376,6 @@ def fileparser(filename):
 		if Dying and time.time() - started_dying > 1:
 			Dying = False
 		pygame.display.update()
+
 #parses and runs the fileparser function on every single level
 fileparser("water")
