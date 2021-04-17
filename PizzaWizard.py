@@ -24,14 +24,25 @@ class Bullet:
 		self.slope = slope
 		self.height = height #Note: if you think of the y=mx+b function, self.height is the b
 		self.active = True
+		self.hasBeenInMain = False
+		self.Rect = pygame.Rect(*self.get_coordinates(), 80, self.width)
+		self.dif_x = int(direction)
+		self.dif_y = int(height - slope * self.dif_x + self.height)
+	def update(self):
+		if self.orig_x > 0 and self.orig_x < 1200:
+			self.hasBeenInMain = True
 	def display(self):
-		canvas.blit(self.img, self.get_coordinates())
+		canvas.blit(self.img, self.rect())
 	def get_coordinates(self):
-		return (int(self.orig_x), (int(self.slope * self.orig_x + self.height)))
+#		return (int(self.orig_x), (int(self.slope * self.orig_x + self.height)))
+		return (self.dif_x, self.dif_y)
 	def move(self):
 		self.orig_x += self.direction
 	def rect(self):
-		return pygame.Rect(*self.get_coordinates(), 80, self.width)
+		self.Rect.right += self.get_coordinates()[0] - self.Rect.right
+		self.Rect.top += self.get_coordinates()[1] - self.Rect.top
+		print (self.Rect.right)
+		return self.Rect
 class Magic:
 	def __init__(self, img):
 		self.img = img
@@ -69,37 +80,39 @@ class Monster:
 					self.index = 0
 				else:
 					self.index = 1
-			if time.time() - self.shoot > 3 and self.SeenWizard:
-				self.shoot = time.time()
-				if not wizard.Dead:
-					self.shoot_bullet(wizard)
+		if time.time() - self.shoot > 3 and self.SeenWizard:
+			self.shoot = time.time()
+			if not wizard.Dead:
+				self.shoot_bullet(wizard)
 #used for walking, rolling, and moving
 	def move(self, wizard):
 		if self.SeenWizard:
 			if self.rect.right <= wizard.rect.left:
+				if self.direction != 'right':
+					print ('mova righta')
 				self.direction = 'right'
 				self.rect.right += self.speed
 				self.imgs = self.imgsRight
 			if self.rect.left >= wizard.rect.right:
+				if self.direction != 'left':
+					print ('mova lefta')
 				self.direction = 'left'
 				self.rect.right -= self.speed
-				self.imgs = self.imgsRight
+				self.imgs = self.imgsLeft
 	def jump(self):pass
 
 	def fly(self):pass
 
 	def shoot_bullet(self, wizard):
-		print (self.direction)
 		if self.direction == 'left':
 			point1 = (self.rect.left, self.rect.top)
 			direction = -15
 		else:
 			point1 = (self.rect.right, self.rect.top)
 			direction = 15
-		point2 = (wizard.rect.centerx, wizard.rect.bottom - wizard.rect.height / 2)
+		point2 = (wizard.rect.centerx, wizard.rect.top)
 		slope = (abs(point1[1] - point2[1]) / abs(point1[0] - point2[0]))
 		height = point1[1] + point1[0] * slope
-#		print (int(slope * (point1[0]+direction) + height))
 		bullets.append(Bullet(self.bullet_width, self.bullet_img_right if direction > 0 else self.bullet_img_left, direction, point1[0], slope, height, 1))
 #direction:int, orig_x:int, slope:int, height:int, strength:int
 class Wizard:
@@ -252,11 +265,11 @@ def fileparser(filename):
 		if co[0] == 'length':
 			maxdistance = int(co[1])
 		if co[0] == 'ogre':
-			monsters += [Monster(30, ['Bullet2Left.png', 'Bullet1Right.png'], [ogreRight, ogreRight], [ogreLeft, ogreLeft], int(co[1][0]), int(co[1][1]), 115, 145, co[2], 4)]
+			monsters += [Monster(30, ['Bullet2Left.png', 'Bullet2Right.png'], [ogreRight, ogreRight], [ogreLeft, ogreLeft], int(co[1][0]), int(co[1][1]), 115, 145, co[2], 4)]
 		if co[0] == 'rotting':
-			monsters += [Monster(30, ['Bullet2Left.png', 'Bullet2Right.png'], [rottingLeft, rottingLeft], [rottingRight, rottingRight], int(co[1][0]), int(co[1][1]), 133, 144, co[2], 6)]
+			monsters += [Monster(30, ['Bullet2Left.png', 'Bullet2Right.png'], [rottingRight, rottingRight], [rottingLeft, rottingLeft], int(co[1][0]), int(co[1][1]), 133, 144, co[2], 6)]
 		if co[0] == 'skating':
-			monsters += [Monster(40, ['Bullet1Left.png', 'Bullet2Right.png'], [skatingRight, skatingRight], [skatingLeft, skatingLeft], int(co[1][0]), int(co[1][1]), 147, 145, co[2], 8)]
+			monsters += [Monster(40, ['Bullet1Left.png', 'Bullet1Right.png'], [skatingRight, skatingRight], [skatingLeft, skatingLeft], int(co[1][0]), int(co[1][1]), 147, 145, co[2], 8)]
 #imgsRight, imgsLeft, x, y, width, height, direction, speed
 
 	wizard = Wizard()
@@ -273,6 +286,7 @@ def fileparser(filename):
 	while True:
 		clock.tick(50)
 		canvas.fill((255, 255, 255))
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 		canvas.blit(bg, (bgx, 0))
 
 #This function makes it an infinity background until it reaches the end or the beginning
@@ -293,13 +307,14 @@ def fileparser(filename):
 			monster.display(wizard)
 		canvas.blit(grass, (0, 500))
 		for bullet in bullets[:]:
-			if bullet.rect().right <= 0 or bullet.rect().left >= winWidth or bullet.rect().top >= winHeight or bullet.rect().bottom <= 0:
-				print ('DELETING')
+			bullet.update()
+			if (bullet.rect().right <= 0 or bullet.rect().left >= winWidth or bullet.rect().top >= winHeight or bullet.rect().bottom <= 0) and bullet.hasBeenInMain:
+				print ('DELETE')
 				del bullets[bullets.index(bullet)]
 				continue
 			bullet.move()
 			bullet.display()
-
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #keyboard event handling
 		for event in pygame.event.get():
 
@@ -337,29 +352,33 @@ def fileparser(filename):
 				bgx += wizard.speed
 				for monster in monsters:
 					monster.rect.right += wizard.speed
+				for bullet in bullets:
+					bullet.Rect.right += wizard.speed
 			elif distance != 1 and wizard.rect.left == 150:
 				bgx += wizard.speed
 				for monster in monsters:
 					monster.rect.right += wizard.speed
+				for bullet in bullets:
+					bullet.Rect.right += wizard.speed
 			else:
 				if wizard.rect.left > 150:
 					wizard.rect.right -= wizard.speed
 				else:
 					if wizard.rect.left > 0:
 						wizard.rect.right -= wizard.speed
-#					wizard.move()
-#					for monster in monsters:
-#						monster.rect.right += wizard.speed
-
 		if wizard.move() == 'right' and not wizard.Dead:
 			if bgx != 0 and wizard.rect.left == 150:
 				bgx -= wizard.speed
 				for monster in monsters:
 					monster.rect.left -= wizard.speed
+				for bullet in bullets:
+					bullet.Rect.right -= wizard.speed
 			elif distance != maxdistance and wizard.rect.left == 150:
 				bgx -= wizard.speed
 				for monster in monsters:
 					monster.rect.left -= wizard.speed
+				for bullet in bullets:
+					bullet.Rect.right -= wizard.speed
 			else:
 				if wizard.rect.left < 150:
 					wizard.rect.right += wizard.speed
