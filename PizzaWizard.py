@@ -16,30 +16,38 @@ clock = pygame.time.Clock()
 #class for the bullets that the monsters launch
 class Bullet:
 	#Initializer function needs some mathematical variables to be able to point to the wizard
-	def __init__(self, width, img, direction:int, orig_x:int, slope:int, height:int, strength:int):
+	def __init__(self, dif_x, dif_y, orig_x, width, height, direction, img):
+		self.dif_x = dif_x
+		self.dif_y = dif_y
+		self.orig_x = orig_x
+		self.slope = self.dif_y / self.dif_x
 		self.width = width
+		self.height = height
 		self.direction = direction
 		self.img = img
-		self.orig_x = orig_x
-		self.slope = slope
-		self.height = height #Note: if you think of the y=mx+b function, self.height is the b
-		self.active = True
+		self.Rect = pygame.Rect(*self.get_coordinates())
 		self.hasBeenInMain = False
-		self.Rect = pygame.Rect(*(int(self.orig_x), (int(self.slope * self.orig_x + self.height))), 80, self.width)
+#		self.width = width
+#		self.direction = direction
+#		self.img = img
+#		self.slope = slope
+#		self.height = height #Note: if you think of the y=mx+b function, self.height is the b
+#		self.active = True
+#		self.hasBeenInMain = False
+#		self.Rect = pygame.Rect(*(int(self.orig_x), (int(self.slope * self.orig_x + self.height))), 80, self.width)
 	def update(self):
 		if self.orig_x > 0 and self.orig_x < 1200:
 			self.hasBeenInMain = True
 	def display(self):
 		canvas.blit(self.img, self.get_coordinates())
 	def get_coordinates(self):
-		return (int(self.orig_x), (int(self.slope * self.orig_x + self.height)))
+		return (int(self.orig_x), (int(self.slope * self.orig_x + self.height)), self.width, self.height)
 #		return (self.dif_x, self.dif_y)
 	def move(self):
 		self.orig_x += self.direction
 	def rect(self):
-		self.Rect.right += self.get_coordinates()[0] - self.Rect.right
-		self.Rect.top += self.get_coordinates()[1] - self.Rect.top
-		print (self.Rect.right)
+		self.Rect.right += self.dif_x
+		self.Rect.top += self.dif_y
 		return self.Rect
 class Magic:
 	def __init__(self, img):
@@ -109,9 +117,14 @@ class Monster:
 			point1 = (self.rect.right, self.rect.top)
 			direction = 15
 		point2 = (wizard.rect.centerx, wizard.rect.top)
-		slope = (abs(point1[1] - point2[1]) / abs(point1[0] - point2[0]))
+		try:
+			slope = (abs(point1[1] - point2[1]) / abs(point1[0] - point2[0]))
+		except ZeroDivisionError:
+			slope = 0
+		dif_x = abs(point1[1] - point2[1])
+		dif_y = abs(point1[0] - point2[0])
 		height = point1[1] + point1[0] * slope
-		bullets.append(Bullet(self.bullet_width, self.bullet_img_right if direction > 0 else self.bullet_img_left, direction, point1[0], slope, height, 1))
+		bullets.append(Bullet(dif_x, dif_y, point1[0], self.bullet_width, height, direction, self.bullet_img_right if direction>0 else self.bullet_img_left))
 #direction:int, orig_x:int, slope:int, height:int, strength:int
 class Wizard:
 	def __init__(self):
