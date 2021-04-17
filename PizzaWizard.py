@@ -25,17 +25,15 @@ class Bullet:
 		self.height = height #Note: if you think of the y=mx+b function, self.height is the b
 		self.active = True
 		self.hasBeenInMain = False
-		self.Rect = pygame.Rect(*self.get_coordinates(), 80, self.width)
-		self.dif_x = int(direction)
-		self.dif_y = int(height - slope * self.dif_x + self.height)
+		self.Rect = pygame.Rect(*(int(self.orig_x), (int(self.slope * self.orig_x + self.height))), 80, self.width)
 	def update(self):
 		if self.orig_x > 0 and self.orig_x < 1200:
 			self.hasBeenInMain = True
 	def display(self):
-		canvas.blit(self.img, self.rect())
+		canvas.blit(self.img, self.get_coordinates())
 	def get_coordinates(self):
-#		return (int(self.orig_x), (int(self.slope * self.orig_x + self.height)))
-		return (self.dif_x, self.dif_y)
+		return (int(self.orig_x), (int(self.slope * self.orig_x + self.height)))
+#		return (self.dif_x, self.dif_y)
 	def move(self):
 		self.orig_x += self.direction
 	def rect(self):
@@ -308,7 +306,7 @@ def fileparser(filename):
 		canvas.blit(grass, (0, 500))
 		for bullet in bullets[:]:
 			bullet.update()
-			if (bullet.rect().right <= 0 or bullet.rect().left >= winWidth or bullet.rect().top >= winHeight or bullet.rect().bottom <= 0) and bullet.hasBeenInMain:
+			if (bullet.rect().right <= 0 or bullet.rect().left >= winWidth) and bullet.hasBeenInMain:
 				print ('DELETE')
 				del bullets[bullets.index(bullet)]
 				continue
