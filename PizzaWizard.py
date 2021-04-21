@@ -28,9 +28,9 @@ class Bullet:
 			y2 = slope * orig_2 + self.rect.top
 		self.dif_y = y1 - y2
 		self.dif_x = speed if self.rect.right < target_x else -speed
-		print (speed)
+		#print (speed)
 		self.img = pygame.image.load(imgs[1] if self.dif_x < 0 else imgs[0])
-		print (imgs[1] if self.dif_x < 0 else imgs[0])
+		#print (imgs[1] if self.dif_x < 0 else imgs[0])
 		self.hasBeenInMain = False
 	def update(self):
 		if self.rect.right > 0 and self.rect.left < winWidth:
@@ -85,14 +85,14 @@ class Monster:
 	def move(self, wizard):
 		if self.SeenWizard:
 			if self.rect.right <= wizard.rect.left:
-				if self.direction != 'right':
-					print ('mova righta')
+#				if self.direction != 'right':
+					#print ('mova righta')
 				self.direction = 'right'
 				self.rect.right += self.speed
 				self.imgs = self.imgsRight
 			if self.rect.left >= wizard.rect.right:
-				if self.direction != 'left':
-					print ('mova lefta')
+#				if self.direction != 'left':
+					#print ('mova lefta')
 				self.direction = 'left'
 				self.rect.right -= self.speed
 				self.imgs = self.imgsLeft
@@ -313,7 +313,7 @@ def fileparser(filename):
 		for bullet in bullets[:]:
 			bullet.update()
 			if (bullet.rect.right <= 0 or bullet.rect.left >= winWidth) and bullet.hasBeenInMain:
-				print ('DELETE')
+				#print ('DELETE')
 				del bullets[bullets.index(bullet)]
 				continue
 			bullet.move()
