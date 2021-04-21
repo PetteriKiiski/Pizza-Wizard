@@ -11,7 +11,6 @@ winHeight = 600
 canvas = pygame.display.set_mode((1200, 600))
 clock = pygame.time.Clock()
 #class for the bullets that the monsters launch
-#direction:int, orig_x:int, slope:int, height:int, strength:int
 class Bullet:
 	#Initializer function needs some mathematical variables to be able to point to the wizard
 	def __init__(self, imgs, x, y, width, height, target_x, target_y, speed, strength):
@@ -28,9 +27,7 @@ class Bullet:
 			y2 = slope * orig_2 + self.rect.top
 		self.dif_y = y1 - y2
 		self.dif_x = speed if self.rect.right < target_x else -speed
-		#print (speed)
 		self.img = pygame.image.load(imgs[1] if self.dif_x < 0 else imgs[0])
-		#print (imgs[1] if self.dif_x < 0 else imgs[0])
 		self.hasBeenInMain = False
 	def update(self):
 		if self.rect.right > 0 and self.rect.left < winWidth:
@@ -40,13 +37,6 @@ class Bullet:
 		self.rect.top += self.dif_y
 	def display(self, canvas):
 		canvas.blit(self.img, self.rect)
-class Magic:
-	def __init__(self, img):
-		self.img = img
-	def display(self):
-		pass
-	def get_coordinates(self):
-		pass
 
 #class for all the monsters
 class Monster:
@@ -81,18 +71,13 @@ class Monster:
 			self.shoot = time.time()
 			if not wizard.Dead:
 				self.shoot_bullet(wizard)
-#used for walking, rolling, and moving
 	def move(self, wizard):
 		if self.SeenWizard:
 			if self.rect.right <= wizard.rect.left:
-#				if self.direction != 'right':
-					#print ('mova righta')
 				self.direction = 'right'
 				self.rect.right += self.speed
 				self.imgs = self.imgsRight
 			if self.rect.left >= wizard.rect.right:
-#				if self.direction != 'left':
-					#print ('mova lefta')
 				self.direction = 'left'
 				self.rect.right -= self.speed
 				self.imgs = self.imgsLeft
@@ -103,22 +88,10 @@ class Monster:
 	def shoot_bullet(self, wizard):
 		if self.direction == 'left':
 			point1 = (self.rect.left, self.rect.top)
-#			direction = -15
 		else:
 			point1 = (self.rect.right, self.rect.top)
-#			direction = 15
 		point2 = (wizard.rect.centerx, wizard.rect.top)
-#		try:
-#			slope = (abs(point1[1] - point2[1]) / abs(point1[0] - point2[0]))
-#		except ZeroDivisionError:
-#			slope = 0
-#		dif_x = point1[1] - point2[1]
-#		dif_y = point1[0] - point2[0]
-#		height = point1[1] + point1[0] * slope
 		bullets.append(Bullet(self.bullet_imgs, point1[0], point1[1], 80, self.bullet_height, point2[0], point2[1], 15, self.bullet_strength))
-#		bullets.append(Bullet(dif_x, dif_y, point1[0], self.bullet_width, height, direction, self.bullet_img_right if direction>0 else self.bullet_img_left))
-#direction:int, orig_x:int, slope:int, height:int, strength:int
-#self, imgs, x, y, width, height, target_x, target_y, speed
 class Wizard:
 	def __init__(self):
 		self.health = 10
@@ -290,9 +263,7 @@ def fileparser(filename):
 	while True:
 		clock.tick(50)
 		canvas.fill((255, 255, 255))
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 		canvas.blit(bg, (bgx, 0))
-
 #This function makes it an infinity background until it reaches the end or the beginning
 		if bgx < 0:
 			canvas.blit(bg, (bgx + winWidth, 0))
@@ -313,12 +284,10 @@ def fileparser(filename):
 		for bullet in bullets[:]:
 			bullet.update()
 			if (bullet.rect.right <= 0 or bullet.rect.left >= winWidth) and bullet.hasBeenInMain:
-				#print ('DELETE')
 				del bullets[bullets.index(bullet)]
 				continue
 			bullet.move()
 			bullet.display(canvas)
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #keyboard event handling
 		for event in pygame.event.get():
 
