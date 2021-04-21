@@ -7,5 +7,6 @@ ogre: 5000, 355:left
 ogre: 7500, 355:left
 ogre: 10000, 355:left
 ogre: 11500, 355:left
-rotting:5935, 356:right
-skating:3000, 355:left
+ogre:5935, 355:right
+ogre:3000, 355:left
+boss:spiral-eyes:11500, 217:left

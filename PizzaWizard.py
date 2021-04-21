@@ -26,6 +26,8 @@ class Bullet:
 			y1 = slope * orig_1 + self.rect.top
 			y2 = slope * orig_2 + self.rect.top
 		self.dif_y = y1 - y2
+		if y < target_y:
+			self.dif_y = abs(self.dif_y)
 		self.dif_x = speed if self.rect.right < target_x else -speed
 		self.img = pygame.image.load(imgs[1] if self.dif_x < 0 else imgs[0])
 		self.hasBeenInMain = False
@@ -40,9 +42,11 @@ class Bullet:
 
 #class for all the monsters
 class Monster:
-	def __init__(self, bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength):
+	def __init__(self, bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1):
+		self.health = health
 		self.index = 0
 		self.bullet_height = bullet_height
+		self.healthImg = pygame.image.load("Bar{}.png".format(self.health))
 		self.bullet_imgs = bullet_imgs
 		self.shoot = time.time()
 		self.rect = pygame.Rect(x, y, width, height)
@@ -54,12 +58,21 @@ class Monster:
 		self.timer = time.time()
 		self.speed = speed
 		self.bullet_strength = bullet_strength
-
+	def lose_health(self):
+		self.health -= 1
+		if self.health > 0:
+			self.healthImg = pygame.image.load("Bar{}.png".format(self.health))
 	def display(self, wizard):
 		if self.rect.left < winWidth and self.rect.right > 0:
 			self.SeenWizard = True
 			canvas.blit(self.imgs[self.index], self.rect)
-
+#		if self.rect.left-25 >= 0:
+#			if self.rect.left+163 <= winWidth:
+		canvas.blit(self.healthImg, (self.rect.left-25, self.rect.top - 60))
+#			else:
+#				canvas.blit(self.healthImg, (1009, self.rect.top - 60))
+#		else:
+#			canvas.blit(self.healthImg, (0, self.rect.top - 60))
 		if self.rect.left > 0 and self.rect.right < winWidth:
 			if time.time() - self.timer >= 0.3:
 				self.timer = time.time()
@@ -87,10 +100,10 @@ class Monster:
 
 	def shoot_bullet(self, wizard):
 		if self.direction == 'left':
-			point1 = (self.rect.left, self.rect.top)
+			point1 = (self.rect.left, self.rect.bottom)
 		else:
-			point1 = (self.rect.right, self.rect.top)
-		point2 = (wizard.rect.centerx, wizard.rect.top)
+			point1 = (self.rect.right, self.rect.bottom)
+		point2 = (wizard.rect.centerx, wizard.rect.bottom - 50)
 		bullets.append(Bullet(self.bullet_imgs, point1[0], point1[1], 80, self.bullet_height, point2[0], point2[1], 15, self.bullet_strength))
 class Wizard:
 	def __init__(self):
@@ -98,6 +111,7 @@ class Wizard:
 		self.healthImg = pygame.image.load("Bar{}.png".format(self.health))
 		self.rect = pygame.Rect(150, 307, 138, 193)
 		self.spells = []
+		self.spell_timer = time.time()
 		self.timer = time.time()
 		self.speed = 12
 		self.Dead = False
@@ -112,7 +126,20 @@ class Wizard:
 		self.atboarder = False
 		self.jumping = False
 		self.jumpcount = 10
-
+	def can_shoot_magic(self):
+		if time.time() - self.spell_timer >= 3:
+			return True
+		return False
+	def shoot_magic(self, targetx, targety):
+		if not self.can_shoot_magic():
+			return
+		self.spell_timer = time.time()
+		if self.move() == 'left':
+			point1 = (self.rect.left, self.rect.top)
+		else:
+			point1 = (self.rect.right, self.rect.top)
+		point2 = (targetx, targety)
+		magics.append(Bullet(['Magic1.png', 'Magic1.png'], point1[0], point1[1], 100, 20, point2[0], point2[1], 15, 1))
 #This function jumps in a parabola
 	def lose_health(self):
 		self.health -= 1
@@ -185,9 +212,12 @@ class Wizard:
 def fileparser(filename):
 
 #initializes a bunch of lists and variables needed from beginning to end in this function
-	global bullets
+	global bullets, magics
 	monsters = []
 	bullets = []
+	magics = []
+	breakout = False
+	boss = None
 	pygame.display.set_caption("Pizza Wizard")
 	canvas.fill((255, 255, 255))
 	bg = pygame.image.load("Level1BG.png")
@@ -198,6 +228,8 @@ def fileparser(filename):
 	rottingLeft = pygame.image.load("Monster2Left.png")
 	skatingRight = pygame.image.load("Monster1Right.png")
 	skatingLeft = pygame.image.load("Monster1Left.png")
+	spiralRight = pygame.image.load("Monster6Right.png")
+	spiralLeft = pygame.image.load("Monster6Left.png")
 	bgx = 0
 	maxdistance = 2
 	distance = 1
@@ -242,12 +274,15 @@ def fileparser(filename):
 		if co[0] == 'length':
 			maxdistance = int(co[1])
 		if co[0] == 'ogre':
-			monsters += [Monster(30, ['Bullet2Right.png', 'Bullet2Left.png'], [ogreRight, ogreRight], [ogreLeft, ogreLeft], int(co[1][0]), int(co[1][1]), 115, 145, co[2], 4, 1)]
+			monsters += [Monster(30, ['Bullet2Right.png', 'Bullet2Left.png'], [ogreRight, ogreRight], [ogreLeft, ogreLeft], int(co[1][0]), int(co[1][1]), 115, 145, 'left', 4, 1)]
 		if co[0] == 'rotting':
-			monsters += [Monster(30, ['Bullet2Right.png', 'Bullet2Left.png'], [rottingRight, rottingRight], [rottingLeft, rottingLeft], int(co[1][0]), int(co[1][1]), 133, 144, co[2], 6, 1)]
+			monsters += [Monster(30, ['Bullet2Right.png', 'Bullet2Left.png'], [rottingRight, rottingRight], [rottingLeft, rottingLeft], int(co[1][0]), int(co[1][1]), 133, 144, 'left', 6, 1, 2)]
 		if co[0] == 'skating':
-			monsters += [Monster(40, ['Bullet1Right.png', 'Bullet1Left.png'], [skatingRight, skatingRight], [skatingLeft, skatingLeft], int(co[1][0]), int(co[1][1]), 147, 145, co[2], 8, 2)]
-#imgsRight, imgsLeft, x, y, width, height, direction, speed
+			monsters += [Monster(40, ['Bullet1Right.png', 'Bullet1Left.png'], [skatingRight, skatingRight], [skatingLeft, skatingLeft], int(co[1][0]), int(co[1][1]), 147, 145, 'left', 8, 2, 3)]
+		if co[0] == 'boss':
+			if co[1] == 'spiral-eyes':
+				boss = Monster(40, ['Bullet1Right.png', 'Bullet1Left.png'], [spiralRight, spiralRight], [spiralLeft, spiralLeft], int(co[2][0]), int(co[2][1]), 266, 283, 'left', 1, 3, 5)
+#bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1
 
 	wizard = Wizard()
 	dirchanged = False #direction changed
@@ -277,17 +312,27 @@ def fileparser(filename):
 				distance += 1
 			bgx = 0
 		wizard.display()
-		for monster in monsters:
+		for monster in monsters + [boss]:
+			if breakout and boss:
+				continue
 			monster.move(wizard)
 			monster.display(wizard)
 		canvas.blit(grass, (0, 500))
-		for bullet in bullets[:]:
+		for bullet in bullets[:] + magics[:]:
 			bullet.update()
 			if (bullet.rect.right <= 0 or bullet.rect.left >= winWidth) and bullet.hasBeenInMain:
-				del bullets[bullets.index(bullet)]
+				try:
+					del bullets[bullets.index(bullet)]
+				except:pass
+				try:
+					del magics[magics.index(bullet)]
+				except:pass
 				continue
 			bullet.move()
 			bullet.display(canvas)
+		if breakout:
+			pygame.display.update()
+			break
 #keyboard event handling
 		for event in pygame.event.get():
 
@@ -312,6 +357,10 @@ def fileparser(filename):
 
 					if event.key == K_RCTRL or event.key == K_LCTRL:
 						pass
+				if event.type == MOUSEBUTTONDOWN:
+					pos = pygame.mouse.get_pos()
+#					print (pos)
+					wizard.shoot_magic(*pos)
 
 #stops turning the wizard if the a key has been lifted
 				if event.type == KEYUP:
@@ -323,16 +372,12 @@ def fileparser(filename):
 		if wizard.move() == 'left' and not wizard.Dead:
 			if bgx != 0 and wizard.rect.left == 150:
 				bgx += wizard.speed
-				for monster in monsters:
+				for monster in monsters + bullets + magics + [boss]:
 					monster.rect.right += wizard.speed
-				for bullet in bullets:
-					bullet.rect.right += wizard.speed
 			elif distance != 1 and wizard.rect.left == 150:
 				bgx += wizard.speed
-				for monster in monsters:
+				for monster in monsters + bullets + magics + [boss]:
 					monster.rect.right += wizard.speed
-				for bullet in bullets:
-					bullet.rect.right += wizard.speed
 			else:
 				if wizard.rect.left > 150:
 					wizard.rect.right -= wizard.speed
@@ -342,24 +387,20 @@ def fileparser(filename):
 		if wizard.move() == 'right' and not wizard.Dead:
 			if bgx != 0 and wizard.rect.left == 150:
 				bgx -= wizard.speed
-				for monster in monsters:
+				for monster in monsters + bullets + magics + [boss]:
 					monster.rect.left -= wizard.speed
-				for bullet in bullets:
-					bullet.rect.right -= wizard.speed
 			elif distance != maxdistance and wizard.rect.left == 150:
 				bgx -= wizard.speed
-				for monster in monsters:
+				for monster in monsters + bullets + magics + [boss]:
 					monster.rect.left -= wizard.speed
-				for bullet in bullets:
-					bullet.rect.right -= wizard.speed
 			else:
 				if wizard.rect.left < 150:
 					wizard.rect.right += wizard.speed
 				else:
 					if wizard.rect.right < winWidth:
 						wizard.rect.right += wizard.speed
-#If the wizard hits a monster, it loses health
-		for attacker in monsters + bullets[:]:
+#If the wizard hits a monster or bullet, it loses health
+		for attacker in monsters + bullets[:] + [boss]:
 			if attacker.rect.colliderect(wizard.rect) and not Dying:
 				started_dying = time.time()
 				wizard.lose_health()
@@ -369,9 +410,33 @@ def fileparser(filename):
 						wizard.lose_health()
 					del bullets[bullets.index(attacker)]
 				break
+		for monster in monsters[:] + [boss]:
+			if breakout:
+				break
+			for magic in magics[:]:
+				if monster.rect.colliderect(magic.rect):
+					monster.lose_health()
+					if monster.health == 0:
+						if monster == boss:
+							print ('you win')
+							breakout = True
+						else:
+							del monsters[monsters.index(monster)]
+					del magics[magics.index(magic)]
+					if breakout:
+						break
 		if Dying and time.time() - started_dying > 1:
 			Dying = False
 		pygame.display.update()
-
+def endloop():
+	while True:
+		for event in pygame.event.get():
+			if event.type == QUIT:
+				pygame.quit()
+				sys.exit()
+		pygame.display.update()
 #parses and runs the fileparser function on every single level
+fileparser("level2")
+time.sleep(3)
 fileparser("water")
+endloop()
