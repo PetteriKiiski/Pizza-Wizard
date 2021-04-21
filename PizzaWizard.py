@@ -6,48 +6,44 @@ class ParseError:
 	def __init__(self):
 		print ('cannot parse file')
 
-class NotImpmlementedError:pass
-#This class will be the base class for all the monsters
-
 winWidth = 1200
 winHeight = 600
 canvas = pygame.display.set_mode((1200, 600))
 clock = pygame.time.Clock()
 #class for the bullets that the monsters launch
+#direction:int, orig_x:int, slope:int, height:int, strength:int
 class Bullet:
 	#Initializer function needs some mathematical variables to be able to point to the wizard
-	def __init__(self, dif_x, dif_y, orig_x, width, height, direction, img):
-		self.dif_x = dif_x
-		self.dif_y = dif_y
+	def __init__(self, bullet_height, direction, orig_x, slope, height, strength, img):
+#		self.dif_x = dif_x
+#		self.dif_y = dif_y
+		self.bullet_height = bullet_height
 		self.orig_x = orig_x
-		self.slope = self.dif_y / self.dif_x
-		self.width = width
-		self.height = height
-		self.direction = direction
-		self.img = img
-		self.Rect = pygame.Rect(*self.get_coordinates())
-		self.hasBeenInMain = False
+#		self.slope = self.dif_y / self.dif_x
 #		self.width = width
+#		self.height = height
 #		self.direction = direction
 #		self.img = img
-#		self.slope = slope
-#		self.height = height #Note: if you think of the y=mx+b function, self.height is the b
-#		self.active = True
+#		self.Rect = pygame.Rect(*self.get_coordinates())
 #		self.hasBeenInMain = False
-#		self.Rect = pygame.Rect(*(int(self.orig_x), (int(self.slope * self.orig_x + self.height))), 80, self.width)
+#		self.width = width
+		self.direction = direction
+		self.img = img
+		self.slope = slope
+		self.height = height #Note: if you think of the y=mx+b function, self.height is the b
+		self.active = True
+		self.hasBeenInMain = False
+		self.Rect = pygame.Rect(*(int(self.orig_x), (int(self.slope * self.orig_x + self.height))), 80, self.bullet_height)
 	def update(self):
 		if self.orig_x > 0 and self.orig_x < 1200:
 			self.hasBeenInMain = True
 	def display(self):
 		canvas.blit(self.img, self.get_coordinates())
 	def get_coordinates(self):
-		return (int(self.orig_x), (int(self.slope * self.orig_x + self.height)), self.width, self.height)
+		return (int(self.orig_x), (int(self.slope * self.orig_x + self.height)))
 #		return (self.dif_x, self.dif_y)
-	def move(self):
-		self.orig_x += self.direction
+	def move(self, *ignore):pass
 	def rect(self):
-		self.Rect.right += self.dif_x
-		self.Rect.top += self.dif_y
 		return self.Rect
 class Magic:
 	def __init__(self, img):
@@ -59,9 +55,9 @@ class Magic:
 
 #class for all the monsters
 class Monster:
-	def __init__(self, bullet_width, bullet_img, imgsRight, imgsLeft, x, y, width, height, direction, speed):
+	def __init__(self, bullet_height, bullet_img, imgsRight, imgsLeft, x, y, width, height, direction, speed):
 		self.index = 0
-		self.bullet_width = bullet_width
+		self.bullet_height = bullet_height
 		self.bullet_img_left = pygame.image.load(bullet_img[0])
 		self.bullet_img_right = pygame.image.load(bullet_img[1])
 		self.shoot = time.time()
@@ -121,10 +117,11 @@ class Monster:
 			slope = (abs(point1[1] - point2[1]) / abs(point1[0] - point2[0]))
 		except ZeroDivisionError:
 			slope = 0
-		dif_x = abs(point1[1] - point2[1])
-		dif_y = abs(point1[0] - point2[0])
+		dif_x = point1[1] - point2[1]
+		dif_y = point1[0] - point2[0]
 		height = point1[1] + point1[0] * slope
-		bullets.append(Bullet(dif_x, dif_y, point1[0], self.bullet_width, height, direction, self.bullet_img_right if direction>0 else self.bullet_img_left))
+		bullets.append(Bullet(self.bullet_height, direction, point1[0], slope, height, 1, self.bullet_img_right if direction>0 else self.bullet_img_left))
+#		bullets.append(Bullet(dif_x, dif_y, point1[0], self.bullet_width, height, direction, self.bullet_img_right if direction>0 else self.bullet_img_left))
 #direction:int, orig_x:int, slope:int, height:int, strength:int
 class Wizard:
 	def __init__(self):
