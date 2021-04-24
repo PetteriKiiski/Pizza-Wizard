@@ -6,7 +6,7 @@ monster name: width, height
 
 #rotting-teeth: 133, 144
 
-skater: 147, 145
+#skater: 147, 145
 
 dragon: 129, 179
 

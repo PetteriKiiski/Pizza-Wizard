@@ -1,3 +1,4 @@
+#CREATE LEVEL 4(broken-dragon)
 import pygame, sys, time
 from pygame.locals import *
 
@@ -5,7 +6,7 @@ from pygame.locals import *
 class ParseError:
 	def __init__(self):
 		print ('cannot parse file')
-
+pygame.init()
 winWidth = 1200
 winHeight = 600
 canvas = pygame.display.set_mode((1200, 600))
@@ -42,7 +43,10 @@ class Bullet:
 
 #class for all the monsters
 class Monster:
-	def __init__(self, bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1):
+	def __init__(self, bullet_speed, bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1, jumps=False):
+		self.bullet_speed = bullet_speed
+		self.jumpcount = 10
+		self.jumps = jumps
 		self.health = health
 		self.index = 0
 		self.bullet_height = bullet_height
@@ -94,7 +98,24 @@ class Monster:
 				self.direction = 'left'
 				self.rect.right -= self.speed
 				self.imgs = self.imgsLeft
-	def jump(self):pass
+			if self.rect.bottom < 500:
+				self.rect.bottom += 4
+			self.jump()
+	def jump(self):
+		if not self.jumps:
+			return
+		if self.jumpcount >= -10:
+			neg = 1
+			if self.jumpcount < 0:
+				neg = -1
+			self.rect.bottom -= int((self.jumpcount**2) * 0.5 * neg)
+			self.jumpcount -= 1
+		else:
+			if self.rect.bottom > 1090 and self.rect.bottom < 1110:
+				self.jumpcount = 0
+			else:
+				self.jumping = False
+				self.jumpcount = 10
 
 	def fly(self):pass
 
@@ -104,7 +125,7 @@ class Monster:
 		else:
 			point1 = (self.rect.right, self.rect.bottom)
 		point2 = (wizard.rect.centerx, wizard.rect.bottom - 50)
-		bullets.append(Bullet(self.bullet_imgs, point1[0], point1[1], 80, self.bullet_height, point2[0], point2[1], 15, self.bullet_strength))
+		bullets.append(Bullet(self.bullet_imgs, point1[0], point1[1], 80, self.bullet_height, point2[0], point2[1], self.bullet_speed, self.bullet_strength))
 class Wizard:
 	def __init__(self):
 		self.health = 10
@@ -149,6 +170,7 @@ class Wizard:
 		self.healthImg = pygame.image.load("HealthBar.png")
 		self.images = self.imagesDead
 		self.Dead = True
+		magics = []
 	def parabela(self):
 		if self.jumpcount >= -10:
 			neg = 1
@@ -212,7 +234,7 @@ class Wizard:
 def fileparser(filename):
 
 #initializes a bunch of lists and variables needed from beginning to end in this function
-	global bullets, magics
+	global bullets, magics, current_time
 	monsters = []
 	bullets = []
 	magics = []
@@ -220,6 +242,8 @@ def fileparser(filename):
 	boss = None
 	pygame.display.set_caption("Pizza Wizard")
 	canvas.fill((255, 255, 255))
+	Renderable = pygame.font.SysFont(None, 48)
+	DisplayText = Renderable.render('Ingredient 1 : water', True, (0, 0, 0))
 	bg = pygame.image.load("Level1BG.png")
 	grass = pygame.image.load("Grass.png")
 	ogreRight = pygame.image.load("Monster3Right.png")
@@ -228,8 +252,12 @@ def fileparser(filename):
 	rottingLeft = pygame.image.load("Monster2Left.png")
 	skatingRight = pygame.image.load("Monster1Right.png")
 	skatingLeft = pygame.image.load("Monster1Left.png")
+	bdragonRight = pygame.image.load("Monster4Right.png")
+	bdragonLeft = pygame.image.load("Monster4Left.png")
 	spiralRight = pygame.image.load("Monster6Right.png")
 	spiralLeft = pygame.image.load("Monster6Left.png")
+	furryRight = pygame.image.load("Monster5Right.png")
+	furryLeft = pygame.image.load("Monster5Left.png")
 	bgx = 0
 	maxdistance = 2
 	distance = 1
@@ -266,40 +294,49 @@ def fileparser(filename):
 			if co[1] == '1':
 				continue
 			if co[1] == '2':
-				bg = pygame.image.load("Level2BG.png")
+				bg = pygame.image.load("Level4BG.png")
+				DisplayText = Renderable.render('Ingredient 2 : flour', True, (0, 0, 0))
 			if co[1] == '3':
 				bg = pygame.image.load("Level3BG.png")
+				DisplayText = Renderable.render('Ingredient 3 : ?????', True, (0, 0, 0))
 			if co[1] == '4':
 				bg = pygame.image.load("Level4BG.png")
+				DisplayText = Renderable.render('Ingredient 4 : ?????', True, (0, 0, 0))
 		if co[0] == 'length':
 			maxdistance = int(co[1])
 		if co[0] == 'ogre':
-			monsters += [Monster(30, ['Bullet2Right.png', 'Bullet2Left.png'], [ogreRight, ogreRight], [ogreLeft, ogreLeft], int(co[1][0]), int(co[1][1]), 115, 145, 'left', 4, 1)]
+			monsters += [Monster(15, 30, ['Bullet2Right.png', 'Bullet2Left.png'], [ogreRight, ogreRight], [ogreLeft, ogreLeft], int(co[1][0]), int(co[1][1]), 115, 145, 'left', 4, 1)]
 		if co[0] == 'rotting':
-			monsters += [Monster(30, ['Bullet2Right.png', 'Bullet2Left.png'], [rottingRight, rottingRight], [rottingLeft, rottingLeft], int(co[1][0]), int(co[1][1]), 133, 144, 'left', 6, 1, 2)]
+			monsters += [Monster(15, 30, ['Bullet2Right.png', 'Bullet2Left.png'], [rottingRight, rottingRight], [rottingLeft, rottingLeft], int(co[1][0]), int(co[1][1]), 133, 144, 'left', 6, 1, 2)]
 		if co[0] == 'skating':
-			monsters += [Monster(40, ['Bullet1Right.png', 'Bullet1Left.png'], [skatingRight, skatingRight], [skatingLeft, skatingLeft], int(co[1][0]), int(co[1][1]), 147, 145, 'left', 8, 2, 3)]
+			monsters += [Monster(15, 40, ['Bullet1Right.png', 'Bullet1Left.png'], [skatingRight, skatingRight], [skatingLeft, skatingLeft], int(co[1][0]), int(co[1][1]), 147, 145, 'left', 8, 2, 3)]
+		if co[0] == 'broken-dragon':
+			monsters += [Monster(15, 40, ['Bullet1Right.png', 'Bullet1Left.png'], [bdragonRight, bdragonRight], [bdragonLeft, bdragonLeft], int(co[1][0]), int(co[1][1]), 129, 179, 'left', 10, 2, health=3, jumps = True)]
 		if co[0] == 'boss':
+			if co[1] == 'furry':
+				boss = Monster(15, 40, ['Bullet1Right.png', 'Bullet1Left.png'], [furryRight, furryRight], [furryLeft, furryLeft], int(co[2][0]), int(co[2][1]), 119, 282, 'left', 4, 5, 5)
 			if co[1] == 'spiral-eyes':
-				boss = Monster(40, ['Bullet1Right.png', 'Bullet1Left.png'], [spiralRight, spiralRight], [spiralLeft, spiralLeft], int(co[2][0]), int(co[2][1]), 266, 283, 'left', 1, 3, 5)
-#bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1
+				boss = Monster(15, 40, ['Bullet1Right.png', 'Bullet1Left.png'], [spiralRight, spiralRight], [spiralLeft, spiralLeft], int(co[2][0]), int(co[2][1]), 266, 283, 'left', 1, 3, 5)
+#bullet_speed, bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1
 
 	wizard = Wizard()
 	dirchanged = False #direction changed
-
+	Dying = False
+	started_dying = time.time()
 	'''
 	This section contains the while statement for the mainloop
 	and ticks our little baby clock we defined at the top
 	 and displays everything
 	'''
-	Dying = False
-	started_dying = time.time()
-
 	while True:
 		clock.tick(50)
+		if time.time() - current_time >= 160:
+			current_time = time.time()
+			pygame.mixer.music.stop()
+			pygame.mixer.music.play()
 		canvas.fill((255, 255, 255))
 		canvas.blit(bg, (bgx, 0))
-#This function makes it an infinity background until it reaches the end or the beginning
+#This part makes it an infinity background until it reaches the end or the beginning
 		if bgx < 0:
 			canvas.blit(bg, (bgx + winWidth, 0))
 		if bgx > 0:
@@ -330,6 +367,7 @@ def fileparser(filename):
 				continue
 			bullet.move()
 			bullet.display(canvas)
+		canvas.blit(DisplayText, (canvas.get_rect().centerx - 150, canvas.get_rect().top))
 		if breakout:
 			pygame.display.update()
 			break
@@ -340,6 +378,9 @@ def fileparser(filename):
 			if event.type == QUIT:
 				pygame.quit()
 				sys.exit()
+#reloop the music
+			if event.type == 1000:
+				pygame.mixer.music.rewind()
 
 #turns the wizard if its not dead
 			if not wizard.Dead:
@@ -427,6 +468,8 @@ def fileparser(filename):
 						break
 		if Dying and time.time() - started_dying > 1:
 			Dying = False
+		if wizard.Dead:
+			magics = []
 		pygame.display.update()
 def endloop():
 	while True:
@@ -436,7 +479,14 @@ def endloop():
 				sys.exit()
 		pygame.display.update()
 #parses and runs the fileparser function on every single level
+pygame.mixer.music.load("music.mp3")
+pygame.mixer.music.play()
+current_time = time.time()
+fileparser("water")
+time.sleep(3)
 fileparser("level2")
 time.sleep(3)
-fileparser("water")
+fileparser("level3")
+time.sleep(3)
+fileparser("level4")
 endloop()

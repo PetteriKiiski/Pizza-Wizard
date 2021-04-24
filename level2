@@ -1,9 +1,15 @@
 level:2
 length:10
+ogre:7482, 355
+ogre:4873, 355
 ogre:1000, 355
 ogre:1572, 355
 ogre:3972, 355
-rotting:4372, 355
-rotting:4279, 355
+ogre:11000,355
+rotting:6328, 356
+rotting:3478, 356
+rotting:2734, 356
+rotting:4372, 356
+rotting:5279, 356
 boss:spiral-eyes:11000, 217
 #12000
