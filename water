@@ -1,5 +1,6 @@
 level:1
 length:10
+paddle: 100, 1000: 400: 200: 30: 5
 ogre: 2000, 355:left
 ogre: 3500, 355:left
 ogre: 4000, 355:left

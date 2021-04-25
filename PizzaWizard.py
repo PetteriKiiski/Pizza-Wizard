@@ -11,6 +11,25 @@ winWidth = 1200
 winHeight = 600
 canvas = pygame.display.set_mode((1200, 600))
 clock = pygame.time.Clock()
+#basic paddle class for the wizard to jump on(it's a way of dodging bullets)
+class Paddle:
+	def __init__(self, bound1, bound2, y, width, height, speed):
+		self.bound1 = bound1
+		self.bound2 = bound2
+		self.speed = abs(speed)
+		self.rect = pygame.Rect(bound1, y, width, height)
+		self.direction = 'right'
+	def move(self):
+		if self.rect.right > self.bound2:
+			print ('right')
+			self.direction = 'left'
+		if self.rect.left < self.bound1:
+			print ('left')
+			self.direction = 'right'
+		self.rect.left += self.speed if self.direction == 'right' else -self.speed
+#		print (self.rect.left)
+	def display(self, canvas):
+		pygame.draw.rect(canvas, (0, 255, 0), self.rect)
 #class for the bullets that the monsters launch
 class Bullet:
 	#Initializer function needs some mathematical variables to be able to point to the wizard
@@ -102,6 +121,14 @@ class Monster:
 				self.rect.bottom += 4
 			self.jump()
 	def jump(self):
+		for paddle in paddles:
+			if self.rect.bottom >= paddle.rect.top \
+				and self.rect.bottom <= paddle.rect.bottom \
+				and ((self.rect.left >= paddle.rect.left \
+				and self.rect.left <= paddle.rect.right) \
+				or (self.rect.right >= paddle.rect.left \
+				and self.rect.right <= paddle.rect.right)):
+				self.jumps = False
 		if not self.jumps:
 			return
 		if self.jumpcount >= -10:
@@ -120,6 +147,7 @@ class Monster:
 	def fly(self):pass
 
 	def shoot_bullet(self, wizard):
+		bullet_shot.play()
 		if self.direction == 'left':
 			point1 = (self.rect.left, self.rect.bottom)
 		else:
@@ -154,6 +182,7 @@ class Wizard:
 	def shoot_magic(self, targetx, targety):
 		if not self.can_shoot_magic():
 			return
+		lazer.play()
 		self.spell_timer = time.time()
 		if self.move() == 'left':
 			point1 = (self.rect.left, self.rect.top)
@@ -234,10 +263,11 @@ class Wizard:
 def fileparser(filename):
 
 #initializes a bunch of lists and variables needed from beginning to end in this function
-	global bullets, magics, current_time
+	global bullets, magics, current_time, paddles
 	monsters = []
 	bullets = []
 	magics = []
+	paddles = []
 	breakout = False
 	boss = None
 	pygame.display.set_caption("Pizza Wizard")
@@ -312,6 +342,8 @@ def fileparser(filename):
 			monsters += [Monster(15, 40, ['Bullet1Right.png', 'Bullet1Left.png'], [skatingRight, skatingRight], [skatingLeft, skatingLeft], int(co[1][0]), int(co[1][1]), 147, 145, 'left', 8, 2, 3)]
 		if co[0] == 'broken-dragon':
 			monsters += [Monster(15, 40, ['Bullet1Right.png', 'Bullet1Left.png'], [bdragonRight, bdragonRight], [bdragonLeft, bdragonLeft], int(co[1][0]), int(co[1][1]), 129, 179, 'left', 10, 2, health=3, jumps = True)]
+		if co[0] == 'paddle':
+			paddles += [Paddle(int(co[1][0]), int(co[1][1]), int(co[2]), int(co[3]), int(co[4]), int(co[5]))]
 		if co[0] == 'boss':
 			if co[1] == 'furry':
 				boss = Monster(15, 40, ['Bullet1Right.png', 'Bullet1Left.png'], [furryRight, furryRight], [furryLeft, furryLeft], int(co[2][0]), int(co[2][1]), 119, 282, 'left', 4, 5, 5)
@@ -349,6 +381,9 @@ def fileparser(filename):
 				distance += 1
 			bgx = 0
 		wizard.display()
+		for paddle in paddles:
+			paddle.move()
+			paddle.display(canvas)
 		for monster in monsters + [boss]:
 			if breakout and boss:
 				continue
@@ -413,12 +448,18 @@ def fileparser(filename):
 		if wizard.move() == 'left' and not wizard.Dead:
 			if bgx != 0 and wizard.rect.left == 150:
 				bgx += wizard.speed
-				for monster in monsters + bullets + magics + [boss]:
+				for monster in monsters + bullets + magics + paddles +[boss]:
 					monster.rect.right += wizard.speed
+				for paddle in paddles:
+					paddle.bound1 += wizard.speed
+					paddle.bound2 += wizard.speed
 			elif distance != 1 and wizard.rect.left == 150:
 				bgx += wizard.speed
-				for monster in monsters + bullets + magics + [boss]:
+				for monster in monsters + bullets + magics + paddles + [boss]:
 					monster.rect.right += wizard.speed
+				for paddle in paddles:
+					paddle.bound1 + wizard.speed
+					paddle.bound2 += wizard.speed
 			else:
 				if wizard.rect.left > 150:
 					wizard.rect.right -= wizard.speed
@@ -428,12 +469,18 @@ def fileparser(filename):
 		if wizard.move() == 'right' and not wizard.Dead:
 			if bgx != 0 and wizard.rect.left == 150:
 				bgx -= wizard.speed
-				for monster in monsters + bullets + magics + [boss]:
+				for monster in monsters + bullets + magics + paddles + [boss]:
 					monster.rect.left -= wizard.speed
+				for paddle in paddles:
+					paddle.bound1 += wizard.speed
+					paddle.bound2 += wizard.speed
 			elif distance != maxdistance and wizard.rect.left == 150:
 				bgx -= wizard.speed
-				for monster in monsters + bullets + magics + [boss]:
+				for monster in monsters + bullets + magics + paddles + [boss]:
 					monster.rect.left -= wizard.speed
+				for paddle in paddles:
+					paddle.bound1 += wizard.speed
+					paddle.bound2 += wizard.speed
 			else:
 				if wizard.rect.left < 150:
 					wizard.rect.right += wizard.speed
@@ -479,6 +526,8 @@ def endloop():
 				sys.exit()
 		pygame.display.update()
 #parses and runs the fileparser function on every single level
+bullet_shot = pygame.mixer.Sound("bullet_shot.wav")
+lazer = pygame.mixer.Sound("lazer.wav")
 pygame.mixer.music.load("music.mp3")
 pygame.mixer.music.play()
 current_time = time.time()
