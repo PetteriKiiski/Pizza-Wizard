@@ -121,14 +121,6 @@ class Monster:
 				self.rect.bottom += 4
 			self.jump()
 	def jump(self):
-		for paddle in paddles:
-			if self.rect.bottom >= paddle.rect.top \
-				and self.rect.bottom <= paddle.rect.bottom \
-				and ((self.rect.left >= paddle.rect.left \
-				and self.rect.left <= paddle.rect.right) \
-				or (self.rect.right >= paddle.rect.left \
-				and self.rect.right <= paddle.rect.right)):
-				self.jumps = False
 		if not self.jumps:
 			return
 		if self.jumpcount >= -10:
@@ -208,8 +200,9 @@ class Wizard:
 			self.rect.bottom -= int((self.jumpcount**2) * 0.5 * neg)
 			self.jumpcount -= 1
 		else:
-			if self.rect.bottom > 1090 and self.rect.bottom < 1110:
-				self.jumpcount = 0
+			if self.rect.bottom < 500:
+				print ('even more down')
+				self.jumpcount = -9
 			else:
 				self.jumping = False
 				self.jumpcount = 10
@@ -248,6 +241,20 @@ class Wizard:
 		or return the value he is supposed to move
 		since he is acutally just in one position
 		'''
+		for paddle in paddles:
+			if self.rect.bottom >= paddle.rect.top \
+				and self.rect.bottom <= paddle.rect.bottom \
+				and ((self.rect.left <= paddle.rect.left \
+				and self.rect.left >= paddle.rect.right) \
+				or (self.rect.right >= paddle.rect.left \
+				and self.rect.right <= paddle.rect.right) and self.jumpcount <= 0):
+				print ('on paddle')
+				self.jumpcount = 10
+				self.jumping = False
+				continue
+#			elif self.rect.bottom < 500 and not self.jumping:
+#				self.jumpcount = -9
+#				self.jumping = True
 		if self.jumping:
 			self.parabela()
 		if self.Dead:
@@ -350,7 +357,7 @@ def fileparser(filename):
 			if co[1] == 'spiral-eyes':
 				boss = Monster(15, 40, ['Bullet1Right.png', 'Bullet1Left.png'], [spiralRight, spiralRight], [spiralLeft, spiralLeft], int(co[2][0]), int(co[2][1]), 266, 283, 'left', 1, 3, 5)
 #bullet_speed, bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1
-
+	print (len(paddles))
 	wizard = Wizard()
 	dirchanged = False #direction changed
 	Dying = False
@@ -361,7 +368,7 @@ def fileparser(filename):
 	 and displays everything
 	'''
 	while True:
-		clock.tick(50)
+		clock.tick(10000)
 		if time.time() - current_time >= 160:
 			current_time = time.time()
 			pygame.mixer.music.stop()
@@ -381,7 +388,8 @@ def fileparser(filename):
 				distance += 1
 			bgx = 0
 		wizard.display()
-		for paddle in paddles:
+		for i, paddle in enumerate(paddles):
+			print (i)
 			paddle.move()
 			paddle.display(canvas)
 		for monster in monsters + [boss]:
@@ -458,7 +466,7 @@ def fileparser(filename):
 				for monster in monsters + bullets + magics + paddles + [boss]:
 					monster.rect.right += wizard.speed
 				for paddle in paddles:
-					paddle.bound1 + wizard.speed
+					paddle.bound1 += wizard.speed
 					paddle.bound2 += wizard.speed
 			else:
 				if wizard.rect.left > 150:
@@ -472,21 +480,25 @@ def fileparser(filename):
 				for monster in monsters + bullets + magics + paddles + [boss]:
 					monster.rect.left -= wizard.speed
 				for paddle in paddles:
-					paddle.bound1 += wizard.speed
-					paddle.bound2 += wizard.speed
+					paddle.bound1 -= wizard.speed
+					paddle.bound2 -= wizard.speed
 			elif distance != maxdistance and wizard.rect.left == 150:
 				bgx -= wizard.speed
 				for monster in monsters + bullets + magics + paddles + [boss]:
 					monster.rect.left -= wizard.speed
 				for paddle in paddles:
-					paddle.bound1 += wizard.speed
-					paddle.bound2 += wizard.speed
+					paddle.bound1 -= wizard.speed
+					paddle.bound2 -= wizard.speed
 			else:
 				if wizard.rect.left < 150:
 					wizard.rect.right += wizard.speed
 				else:
 					if wizard.rect.right < winWidth:
 						wizard.rect.right += wizard.speed
+		for bullet in bullets[:]:
+			for paddle in paddles:
+				if bullet.rect.colliderect(paddle.rect):
+					del bullets[bullets.index(bullet)]
 #If the wizard hits a monster or bullet, it loses health
 		for attacker in monsters + bullets[:] + [boss]:
 			if attacker.rect.colliderect(wizard.rect) and not Dying:
