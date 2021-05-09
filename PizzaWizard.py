@@ -21,10 +21,10 @@ class Paddle:
 		self.direction = 'right'
 	def move(self):
 		if self.rect.right > self.bound2:
-			print ('right')
+#			print ('right')
 			self.direction = 'left'
 		if self.rect.left < self.bound1:
-			print ('left')
+#			print ('left')
 			self.direction = 'right'
 		self.rect.left += self.speed if self.direction == 'right' else -self.speed
 #		print (self.rect.left)
@@ -199,9 +199,13 @@ class Wizard:
 				neg = -1
 			self.rect.bottom -= int((self.jumpcount**2) * 0.5 * neg)
 			self.jumpcount -= 1
+			if self.rect.bottom >= 500:
+				self.jumping = False
+				self.jumpcount = 10
+				self.rect.bottom = 500
 		else:
 			if self.rect.bottom < 500:
-				print ('even more down')
+#				print ('even more down')
 				self.jumpcount = -9
 			else:
 				self.jumping = False
@@ -241,22 +245,30 @@ class Wizard:
 		or return the value he is supposed to move
 		since he is acutally just in one position
 		'''
+		print (self.jumpcount)
+		if self.jumping:
+			self.parabela()
 		for paddle in paddles:
 			if self.rect.bottom >= paddle.rect.top \
 				and self.rect.bottom <= paddle.rect.bottom \
-				and ((self.rect.left <= paddle.rect.left \
-				and self.rect.left >= paddle.rect.right) \
+				and ((self.rect.left >= paddle.rect.left \
+				and self.rect.left <= paddle.rect.right) \
 				or (self.rect.right >= paddle.rect.left \
 				and self.rect.right <= paddle.rect.right) and self.jumpcount <= 0):
 				print ('on paddle')
 				self.jumpcount = 10
+				print (self.jumpcount)
 				self.jumping = False
-				continue
+				self.rect.bottom = paddle.rect.top
+				break
+				print ('hmmm')
+			elif self.rect.bottom != 500 and not self.jumping:
+				print ('start goin down!!!')
+				self.jumpcount = -1
+				self.jumping = True
 #			elif self.rect.bottom < 500 and not self.jumping:
 #				self.jumpcount = -9
 #				self.jumping = True
-		if self.jumping:
-			self.parabela()
 		if self.Dead:
 			return
 		if self.images == self.imagesFront:
@@ -357,7 +369,7 @@ def fileparser(filename):
 			if co[1] == 'spiral-eyes':
 				boss = Monster(15, 40, ['Bullet1Right.png', 'Bullet1Left.png'], [spiralRight, spiralRight], [spiralLeft, spiralLeft], int(co[2][0]), int(co[2][1]), 266, 283, 'left', 1, 3, 5)
 #bullet_speed, bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1
-	print (len(paddles))
+#	print (len(paddles))
 	wizard = Wizard()
 	dirchanged = False #direction changed
 	Dying = False
@@ -368,7 +380,7 @@ def fileparser(filename):
 	 and displays everything
 	'''
 	while True:
-		clock.tick(10000)
+		clock.tick(50)
 		if time.time() - current_time >= 160:
 			current_time = time.time()
 			pygame.mixer.music.stop()
@@ -389,7 +401,7 @@ def fileparser(filename):
 			bgx = 0
 		wizard.display()
 		for i, paddle in enumerate(paddles):
-			print (i)
+#			print (i)
 			paddle.move()
 			paddle.display(canvas)
 		for monster in monsters + [boss]:
