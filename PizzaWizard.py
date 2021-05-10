@@ -21,13 +21,12 @@ class Paddle:
 		self.direction = 'right'
 	def move(self):
 		if self.rect.right > self.bound2:
-			print ('right')
+#			print ('right')
 			self.direction = 'left'
 		if self.rect.left < self.bound1:
-			print ('left')
+#			print ('left')
 			self.direction = 'right'
 		self.rect.left += self.speed if self.direction == 'right' else -self.speed
-#		print (self.rect.left)
 	def display(self, canvas):
 		pygame.draw.rect(canvas, (0, 255, 0), self.rect)
 #class for the bullets that the monsters launch
@@ -487,7 +486,9 @@ def fileparser(filename):
 				else:
 					if wizard.rect.right < winWidth:
 						wizard.rect.right += wizard.speed
+
 #If the wizard hits a monster or bullet, it loses health
+
 		for attacker in monsters + bullets[:] + [boss]:
 			if attacker.rect.colliderect(wizard.rect) and not Dying:
 				started_dying = time.time()
@@ -513,11 +514,15 @@ def fileparser(filename):
 					del magics[magics.index(magic)]
 					if breakout:
 						break
+
+
 		if Dying and time.time() - started_dying > 1:
 			Dying = False
 		if wizard.Dead:
 			magics = []
+
 		pygame.display.update()
+
 def endloop():
 	while True:
 		for event in pygame.event.get():
