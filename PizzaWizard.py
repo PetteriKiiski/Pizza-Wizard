@@ -248,7 +248,10 @@ class Wizard:
 		print (self.jumpcount)
 		if self.jumping:
 			self.parabela()
-		for paddle in paddles:
+		for i, paddle in enumerate(paddles):
+			print ('identity:' + str(i))
+			#<rect(150, 207, 138, 193)> #self.rect
+			#<rect(251, 400, 200, 30)> #paddle.rect
 			if self.rect.bottom >= paddle.rect.top \
 				and self.rect.bottom <= paddle.rect.bottom \
 				and ((self.rect.left >= paddle.rect.left \
@@ -261,9 +264,10 @@ class Wizard:
 				self.jumping = False
 				self.rect.bottom = paddle.rect.top
 				break
-				print ('hmmm')
 			elif self.rect.bottom != 500 and not self.jumping:
 				print ('start goin down!!!')
+				print (self.rect)
+				print (paddle.rect)
 				self.jumpcount = -1
 				self.jumping = True
 #			elif self.rect.bottom < 500 and not self.jumping:
