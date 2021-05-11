@@ -130,9 +130,14 @@ class Monster:
 				neg = -1
 			self.rect.bottom -= int((self.jumpcount**2) * 0.5 * neg)
 			self.jumpcount -= 1
+			if self.rect.bottom >= 500:
+				self.jumping = False
+				self.jumpcount = 10
+				self.rect.bottom = 500
 		else:
-			if self.rect.bottom > 1090 and self.rect.bottom < 1110:
-				self.jumpcount = 0
+			if self.rect.bottom < 500:
+				self.jumpcount = -9
+
 			else:
 				self.jumping = False
 				self.jumpcount = 10
@@ -521,10 +526,17 @@ def fileparser(filename):
 					if wizard.rect.right < winWidth:
 						wizard.rect.right += wizard.speed
 
-		for bullet in bullets[:]:
+		for bullet in bullets[:] + magics[:]:
 			for paddle in paddles:
 				if bullet.rect.colliderect(paddle.rect):
-					del bullets[bullets.index(bullet)]
+					try:
+						del bullets[bullets.index(bullet)]
+					except ValueError:
+						pass
+					try:
+						del magics[magics.index(bullet)]
+					except ValueError:
+						pass
 
 		#Wizard loses health if hit
 		for attacker in monsters + bullets[:] + [boss]:
@@ -574,11 +586,12 @@ lazer = pygame.mixer.Sound("lazer.wav")
 pygame.mixer.music.load("music.mp3")
 pygame.mixer.music.play()
 current_time = time.time()
+fileparser("level4")
+time.sleep(3)
 fileparser("water")
 time.sleep(3)
 fileparser("level2")
 time.sleep(3)
 fileparser("level3")
 time.sleep(3)
-fileparser("level4")
 endloop()

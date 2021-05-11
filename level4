@@ -1,11 +1,17 @@
 level:4
 length:10
-ogre:5723, 355
-ogre:6938, 355
-ogre:1783, 355
-rotting:4382, 356
-rotting:9438, 356
-skating:9832, 355
-skating:4932, 355
-skating:1297, 355
+paddle: 0, 11000: 300: 5000: 10: 3
+paddle: 100, 1000: 400: 200: 30: 5
+paddle: 200, 1283: 200: 200: 30: 20
+paddle: 142, 11000: 412: 157: 3: 28
+#ogre:5723, 355
+#ogre:6938, 355
+#ogre:1783, 355
+#rotting:4382, 356
+#rotting:9438, 356
+#skating:9832, 355
+#skating:4932, 355
+broken-dragon:1297, 221
+broken-dragon:5032,  221
+broken-dragon:10097, 221
 boss:furry:11000, 218
