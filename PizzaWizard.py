@@ -1,17 +1,20 @@
-#CREATE LEVEL 4(broken-dragon)
 import pygame, sys, time
 from pygame.locals import *
 
-#This class will be a parsing exception
-class ParseError:
-	def __init__(self):
-		print ('cannot parse file')
+#TO - DO List:
+#Key: Person - Task
+
+#1. Petteri - Fix paddle problem(wizard can't jump on left side of paddle)
+#2.
+#3.
+
 pygame.init()
 winWidth = 1200
 winHeight = 600
 canvas = pygame.display.set_mode((1200, 600))
 clock = pygame.time.Clock()
-#basic paddle class for the wizard to jump on(it's a way of dodging bullets)
+
+#--- Paddle Class ---
 class Paddle:
 	def __init__(self, bound1, bound2, y, width, height, speed):
 		self.bound1 = bound1
@@ -21,21 +24,23 @@ class Paddle:
 		self.direction = 'right'
 	def move(self):
 		if self.rect.right > self.bound2:
-#			print ('right')
 			self.direction = 'left'
+
 		if self.rect.left < self.bound1:
-#			print ('left')
 			self.direction = 'right'
+
 		self.rect.left += self.speed if self.direction == 'right' else -self.speed
 	def display(self, canvas):
 		pygame.draw.rect(canvas, (0, 255, 0), self.rect)
-#class for the bullets that the monsters launch
+
+#--- Bullet Class ---
 class Bullet:
-	#Initializer function needs some mathematical variables to be able to point to the wizard
+
+	#Math variables for where to shoot bullets (where the wizard is)
 	def __init__(self, imgs, x, y, width, height, target_x, target_y, speed, strength):
 		self.rect = pygame.Rect(x, y, width, height)
 		self.strength = strength
-		orig_1 = 7 #Just some number for testing
+		orig_1 = 7
 		orig_2 = speed + orig_1
 		try:
 			slope = (abs(self.rect.top - target_y) / abs(self.rect.left - target_x))
@@ -59,7 +64,7 @@ class Bullet:
 	def display(self, canvas):
 		canvas.blit(self.img, self.rect)
 
-#class for all the monsters
+#--- Monster Class ---
 class Monster:
 	def __init__(self, bullet_speed, bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1, jumps=False):
 		self.bullet_speed = bullet_speed
@@ -88,13 +93,9 @@ class Monster:
 		if self.rect.left < winWidth and self.rect.right > 0:
 			self.SeenWizard = True
 			canvas.blit(self.imgs[self.index], self.rect)
-#		if self.rect.left-25 >= 0:
-#			if self.rect.left+163 <= winWidth:
+
 		canvas.blit(self.healthImg, (self.rect.left-25, self.rect.top - 60))
-#			else:
-#				canvas.blit(self.healthImg, (1009, self.rect.top - 60))
-#		else:
-#			canvas.blit(self.healthImg, (0, self.rect.top - 60))
+
 		if self.rect.left > 0 and self.rect.right < winWidth:
 			if time.time() - self.timer >= 0.3:
 				self.timer = time.time()
@@ -120,14 +121,6 @@ class Monster:
 				self.rect.bottom += 4
 			self.jump()
 	def jump(self):
-		for paddle in paddles:
-			if self.rect.bottom >= paddle.rect.top \
-				and self.rect.bottom <= paddle.rect.bottom \
-				and ((self.rect.left >= paddle.rect.left \
-				and self.rect.left <= paddle.rect.right) \
-				or (self.rect.right >= paddle.rect.left \
-				and self.rect.right <= paddle.rect.right)):
-				self.jumps = False
 		if not self.jumps:
 			return
 		if self.jumpcount >= -10:
@@ -153,6 +146,8 @@ class Monster:
 			point1 = (self.rect.right, self.rect.bottom)
 		point2 = (wizard.rect.centerx, wizard.rect.bottom - 50)
 		bullets.append(Bullet(self.bullet_imgs, point1[0], point1[1], 80, self.bullet_height, point2[0], point2[1], self.bullet_speed, self.bullet_strength))
+
+#--- Wizard Class ---
 class Wizard:
 	def __init__(self):
 		self.health = 10
@@ -164,7 +159,7 @@ class Wizard:
 		self.speed = 12
 		self.Dead = False
 
-#creates lists of two picture animations of the wizard and other variables for the animation to work
+		#List of picture animations
 		self.imagesFront = [pygame.image.load("WizardFront.png"), pygame.image.load("WizardFront.png")]
 		self.imagesRight = [pygame.image.load("WizardRight1.png"), pygame.image.load("WizardRight2.png")]
 		self.imagesLeft = [pygame.image.load("WizardLeft1.png"), pygame.image.load("WizardLeft2.png")]
@@ -189,7 +184,7 @@ class Wizard:
 			point1 = (self.rect.right, self.rect.top)
 		point2 = (targetx, targety)
 		magics.append(Bullet(['Magic1.png', 'Magic1.png'], point1[0], point1[1], 100, 20, point2[0], point2[1], 15, 1))
-#This function jumps in a parabola
+
 	def lose_health(self):
 		self.health -= 1
 		if self.health > 0:
@@ -199,30 +194,40 @@ class Wizard:
 		self.images = self.imagesDead
 		self.Dead = True
 		magics = []
-	def parabela(self):
+
+	#Parabola Jump
+	def jump(self):
 		if self.jumpcount >= -10:
 			neg = 1
 			if self.jumpcount < 0:
 				neg = -1
 			self.rect.bottom -= int((self.jumpcount**2) * 0.5 * neg)
 			self.jumpcount -= 1
+			if self.rect.bottom >= 500:
+				self.jumping = False
+				self.jumpcount = 10
+				self.rect.bottom = 500
 		else:
-			if self.rect.bottom > 1090 and self.rect.bottom < 1110:
-				self.jumpcount = 0
+			if self.rect.bottom < 500:
+				self.jumpcount = -9
+
 			else:
 				self.jumping = False
 				self.jumpcount = 10
 
-#displays the wizard, and changes the image every three tenth of a second
+	#Displays wizard, and changes images every 0.3 seconds
 	def display(self):
 		canvas.blit(self.images[self.index], self.rect)
 		if self.rect.left-25 >= 0:
 			if self.rect.left+163 <= winWidth:
 				canvas.blit(self.healthImg, (self.rect.left-25, self.rect.top - 60))
+
 			else:
 				canvas.blit(self.healthImg, (1009, self.rect.top - 60))
+
 		else:
 			canvas.blit(self.healthImg, (0, self.rect.top - 60))
+
 		if self.rect.left > 0 and self.rect.right < winWidth and not self.jumping:
 			if time.time() - self.timer >= 0.3:
 				self.timer = time.time()
@@ -231,7 +236,7 @@ class Wizard:
 				else:
 					self.index = 1
 
-#This function changes the animation images
+	#Changes animation images
 	def turn(self, direction):
 		if not self.Dead:
 			if direction == 'right':
@@ -241,14 +246,35 @@ class Wizard:
 			if direction == 'front':
 				self.images = self.imagesFront
 
+
+	#Moves/ Jumps wizard
 	def move(self):
-		'''
-		This section will move the wizard if he is supposed to jump
-		or return the value he is supposed to move
-		since he is acutally just in one position
-		'''
+		print (self.jumpcount)
 		if self.jumping:
-			self.parabela()
+			self.jump()
+		for i, paddle in enumerate(paddles):
+			print ('identity:' + str(i))
+			#<rect(150, 207, 138, 193)> #self.rect
+			#<rect(251, 400, 200, 30)> #paddle.rect
+			if self.rect.bottom >= paddle.rect.top \
+				and self.rect.bottom <= paddle.rect.bottom \
+				and ((self.rect.left >= paddle.rect.left \
+				and self.rect.left <= paddle.rect.right) \
+				or (self.rect.right >= paddle.rect.left \
+				and self.rect.right <= paddle.rect.right) and self.jumpcount <= 0):
+				print ('on paddle')
+				self.jumpcount = 10
+				print (self.jumpcount)
+				self.jumping = False
+				self.rect.bottom = paddle.rect.top
+				break
+			elif self.rect.bottom != 500 and not self.jumping:
+				print ('start goin down!!!')
+				print (self.rect)
+				print (paddle.rect)
+				self.jumpcount = -1
+				self.jumping = True
+
 		if self.Dead:
 			return
 		if self.images == self.imagesFront:
@@ -257,6 +283,10 @@ class Wizard:
 			return 'right'
 		if self.images == self.imagesLeft:
 			return 'left'
+
+class Container:
+	def __init__(self):
+		pass
 
 #this funcion will parse a file and play the level
 def fileparser(filename):
@@ -349,16 +379,12 @@ def fileparser(filename):
 			if co[1] == 'spiral-eyes':
 				boss = Monster(15, 40, ['Bullet1Right.png', 'Bullet1Left.png'], [spiralRight, spiralRight], [spiralLeft, spiralLeft], int(co[2][0]), int(co[2][1]), 266, 283, 'left', 1, 3, 5)
 #bullet_speed, bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1
-
 	wizard = Wizard()
 	dirchanged = False #direction changed
 	Dying = False
 	started_dying = time.time()
-	'''
-	This section contains the while statement for the mainloop
-	and ticks our little baby clock we defined at the top
-	 and displays everything
-	'''
+
+	#While statement that runs and displays game, and ticks clock
 	while True:
 		clock.tick(50)
 		if time.time() - current_time >= 160:
@@ -367,7 +393,8 @@ def fileparser(filename):
 			pygame.mixer.music.play()
 		canvas.fill((255, 255, 255))
 		canvas.blit(bg, (bgx, 0))
-#This part makes it an infinity background until it reaches the end or the beginning
+
+		#Moving background
 		if bgx < 0:
 			canvas.blit(bg, (bgx + winWidth, 0))
 		if bgx > 0:
@@ -380,15 +407,19 @@ def fileparser(filename):
 				distance += 1
 			bgx = 0
 		wizard.display()
-		for paddle in paddles:
+
+		for i, paddle in enumerate(paddles):
 			paddle.move()
 			paddle.display(canvas)
+
 		for monster in monsters + [boss]:
 			if breakout and boss:
 				continue
 			monster.move(wizard)
 			monster.display(wizard)
+
 		canvas.blit(grass, (0, 500))
+
 		for bullet in bullets[:] + magics[:]:
 			bullet.update()
 			if (bullet.rect.right <= 0 or bullet.rect.left >= winWidth) and bullet.hasBeenInMain:
@@ -405,18 +436,20 @@ def fileparser(filename):
 		if breakout:
 			pygame.display.update()
 			break
-#keyboard event handling
+
+		#Keyboard handling
 		for event in pygame.event.get():
 
-#quits if needed
+			#Quits
 			if event.type == QUIT:
 				pygame.quit()
 				sys.exit()
-#reloop the music
+
+			#Reloop the music
 			if event.type == 1000:
 				pygame.mixer.music.rewind()
 
-#turns the wizard if its not dead
+			#Turns wizard
 			if not wizard.Dead:
 				if event.type == KEYDOWN:
 					if event.key == K_LEFT:
@@ -434,16 +467,16 @@ def fileparser(filename):
 						pass
 				if event.type == MOUSEBUTTONDOWN:
 					pos = pygame.mouse.get_pos()
-#					print (pos)
 					wizard.shoot_magic(*pos)
 
-#stops turning the wizard if the a key has been lifted
+				#Stops turning wizard
 				if event.type == KEYUP:
 					if event.key in [K_LEFT, K_RIGHT]:
 						dirchanged = False
 		if not dirchanged:
 			wizard.turn('front')
-#Moves the background or the wizard, whichever is needed
+
+		#Moves backround or wizard (depending on location)
 		if wizard.move() == 'left' and not wizard.Dead:
 			if bgx != 0 and wizard.rect.left == 150:
 				bgx += wizard.speed
@@ -457,7 +490,7 @@ def fileparser(filename):
 				for monster in monsters + bullets + magics + paddles + [boss]:
 					monster.rect.right += wizard.speed
 				for paddle in paddles:
-					paddle.bound1 + wizard.speed
+					paddle.bound1 += wizard.speed
 					paddle.bound2 += wizard.speed
 			else:
 				if wizard.rect.left > 150:
@@ -471,15 +504,15 @@ def fileparser(filename):
 				for monster in monsters + bullets + magics + paddles + [boss]:
 					monster.rect.left -= wizard.speed
 				for paddle in paddles:
-					paddle.bound1 += wizard.speed
-					paddle.bound2 += wizard.speed
+					paddle.bound1 -= wizard.speed
+					paddle.bound2 -= wizard.speed
 			elif distance != maxdistance and wizard.rect.left == 150:
 				bgx -= wizard.speed
 				for monster in monsters + bullets + magics + paddles + [boss]:
 					monster.rect.left -= wizard.speed
 				for paddle in paddles:
-					paddle.bound1 += wizard.speed
-					paddle.bound2 += wizard.speed
+					paddle.bound1 -= wizard.speed
+					paddle.bound2 -= wizard.speed
 			else:
 				if wizard.rect.left < 150:
 					wizard.rect.right += wizard.speed
@@ -487,8 +520,12 @@ def fileparser(filename):
 					if wizard.rect.right < winWidth:
 						wizard.rect.right += wizard.speed
 
-#If the wizard hits a monster or bullet, it loses health
+		for bullet in bullets[:]:
+			for paddle in paddles:
+				if bullet.rect.colliderect(paddle.rect):
+					del bullets[bullets.index(bullet)]
 
+		#Wizard loses health if hit
 		for attacker in monsters + bullets[:] + [boss]:
 			if attacker.rect.colliderect(wizard.rect) and not Dying:
 				started_dying = time.time()
