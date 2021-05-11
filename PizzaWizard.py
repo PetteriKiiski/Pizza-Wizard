@@ -4,9 +4,10 @@ from pygame.locals import *
 #TO - DO List:
 #Key: Person - Task
 
-#1. Petteri - Fix paddle problem(wizard can't jump on left side of paddle)
-#2.
-#3.
+#1. Lilja - Create Images(Currently, not needed)
+#2. Lilja - Give me a reason why we need a Container Class!!!(Seriously, though)
+#3. Lilja - New Spells (Might need new images)
+#4. Petteri - If really needed, work on Container Class(I don't understand why we do, though)
 
 pygame.init()
 winWidth = 1200
@@ -247,7 +248,7 @@ class Wizard:
 				self.images = self.imagesFront
 
 
-	#Moves/ Jumps wizard
+	#Moves/Jumps wizard
 	def move(self):
 		print (self.jumpcount)
 		if self.jumping:
@@ -261,7 +262,7 @@ class Wizard:
 				and ((self.rect.left >= paddle.rect.left \
 				and self.rect.left <= paddle.rect.right) \
 				or (self.rect.right >= paddle.rect.left \
-				and self.rect.right <= paddle.rect.right) and self.jumpcount <= 0):
+				and self.rect.right <= paddle.rect.right)):
 				print ('on paddle')
 				self.jumpcount = 10
 				print (self.jumpcount)
