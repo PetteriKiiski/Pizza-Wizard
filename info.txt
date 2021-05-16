@@ -17,3 +17,5 @@ spiral-eyes: 266, 283
 wizard: 138, 193
 
 progress-bar: 191, 45
+
+swimming: 150, 150

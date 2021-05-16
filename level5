@@ -1,6 +1,33 @@
-level:2
-length:2
-broken-dragon:2100, 221
-broken-dragon:2200, 221
-broken-dragon:2300, 221
-boss:furry:2300, 218
+level:5
+length:15
+swimming:1000, 300:800
+swimming:1200, 400:800
+swimming:1400, 500:800
+swimming:1600, 400:800
+swimming:1800, 300:800
+swimming:2000, 400:800
+swimming:2200, 500:800
+swimming:2400, 400:800
+swimming:2400, 300:900
+swimming:2600, 400:800
+swimming:2600, 500:1000
+swimming:2800, 300:800
+swimming:2800, 400:900
+swimming:2800, 500:1000
+swimming:3000, 400:800
+swimming:3000, 300:1000
+swimming:3000, 400:1200
+swimming:3200, 500:1200
+swimming:3200, 400:1400
+swimming:3200, 300:1600
+swimming:10000, 400:800
+swimming:10000, 500:900
+swimming:10000, 400:1000
+swimming:10000, 500:1200
+swimming:10000, 400:1400
+swimming:10000, 500:1600
+swimming:10000, 400:1800
+swimming:10000, 500:2000
+swimming:10000, 400:2200
+swimming:10000, 500:2400
+boss:furry:10000, 218

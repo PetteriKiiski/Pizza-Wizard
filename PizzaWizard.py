@@ -1,4 +1,4 @@
-import pygame, sys, time
+import pygame, sys, time, math
 from pygame.locals import *
 
 #TO - DO List:
@@ -47,10 +47,9 @@ class Bullet:
 		try:
 			slope = (abs(self.rect.top - target_y) / abs(self.rect.left - target_x))
 		except ZeroDivisionError:
-			slope = None
-		if slope is not None:
-			y1 = slope * orig_1 + self.rect.top
-			y2 = slope * orig_2 + self.rect.top
+			slope = 1
+		y1 = slope * orig_1 + self.rect.top
+		y2 = slope * orig_2 + self.rect.top
 		self.dif_y = y1 - y2
 		if y < target_y:
 			self.dif_y = abs(self.dif_y)
@@ -68,10 +67,15 @@ class Bullet:
 
 #--- Monster Class ---
 class Monster:
-	def __init__(self, bullet_speed, bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1, jumps=False):
+	def __init__(self, bullet_speed, bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1, jumps=False, swimming=False, increment_speed=0.1, sin_mult=800):
 		self.bullet_speed = bullet_speed
 		self.jumpcount = 10
 		self.jumps = jumps
+		self.swims = swimming
+		if self.swims:
+			self.sin_val = 0
+			self.increment_speed = increment_speed
+			self.sin_mult = sin_mult
 		self.health = health
 		self.index = 0
 		self.bullet_height = bullet_height
@@ -96,7 +100,7 @@ class Monster:
 			self.SeenWizard = True
 			canvas.blit(self.imgs[self.index], self.rect)
 
-		canvas.blit(self.healthImg, (self.rect.left-25, self.rect.top - 60))
+		canvas.blit(self.healthImg, (self.rect.left, self.rect.top - 60))
 
 		if self.rect.left > 0 and self.rect.right < winWidth:
 			if time.time() - self.timer >= 0.3:
@@ -119,9 +123,10 @@ class Monster:
 				self.direction = 'left'
 				self.rect.right -= self.speed
 				self.imgs = self.imgsLeft
-			if self.rect.bottom < 500:
+			if self.rect.bottom < 500 and not self.swims:
 				self.rect.bottom += 4
 			self.jump()
+			self.swim()
 	def jump(self):
 		if not self.jumps:
 			return
@@ -145,6 +150,11 @@ class Monster:
 
 	def fly(self):pass
 
+	def swim(self):
+		if not self.swims:
+			return
+		self.rect.bottom -= int(math.sin(self.sin_val) * self.sin_mult)
+		self.sin_val += self.increment_speed
 	def shoot_bullet(self, wizard):
 		bullet_shot.play()
 		if self.direction == 'left':
@@ -322,6 +332,8 @@ def fileparser(filename):
 	bdragonLeft = pygame.image.load("Monster4Left.png")
 	spiralRight = pygame.image.load("Monster6Right.png")
 	spiralLeft = pygame.image.load("Monster6Left.png")
+	swimmingRight = pygame.image.load("Monster7Right.png")
+	swimmingLeft = pygame.image.load("Monster7Left.png")
 	furryRight = pygame.image.load("Monster5Right.png")
 	furryLeft = pygame.image.load("Monster5Left.png")
 	bgx = 0
@@ -368,6 +380,9 @@ def fileparser(filename):
 			if co[1] == '4':
 				bg = pygame.image.load("Level4BG.png")
 				DisplayText = Renderable.render('Ingredient 4 : ?????', True, (0, 0, 0))
+			if co[1] == '5':
+				bg = pygame.image.load("Level2BG.png")
+				DisplayText = Renderable.render('Ingredient 5 : ?????', True, (0, 0, 0))
 		if co[0] == 'length':
 			maxdistance = int(co[1])
 		if co[0] == 'ogre':
@@ -380,12 +395,14 @@ def fileparser(filename):
 			monsters += [Monster(15, 40, ['Bullet1Right.png', 'Bullet1Left.png'], [bdragonRight, bdragonRight], [bdragonLeft, bdragonLeft], int(co[1][0]), int(co[1][1]), 129, 179, 'left', 10, 2, health=3, jumps = True)]
 		if co[0] == 'paddle':
 			paddles += [Paddle(int(co[1][0]), int(co[1][1]), int(co[2]), int(co[3]), int(co[4]), int(co[5]))]
+		if co[0] == 'swimming':
+			monsters += [Monster(24, 30, ['Bullet2Right.png', 'Bullet2Left.png'], [swimmingRight, swimmingRight], [swimmingLeft, swimmingLeft], int(co[1][0]), int(co[1][1]), 150, 150, 'left', 1, 1, health=1, jumps = False, swimming = True, sin_mult = int(co[2]))]
 		if co[0] == 'boss':
 			if co[1] == 'furry':
 				boss = Monster(15, 40, ['Bullet1Right.png', 'Bullet1Left.png'], [furryRight, furryRight], [furryLeft, furryLeft], int(co[2][0]), int(co[2][1]), 119, 282, 'left', 4, 5, 5)
 			if co[1] == 'spiral-eyes':
 				boss = Monster(15, 40, ['Bullet1Right.png', 'Bullet1Left.png'], [spiralRight, spiralRight], [spiralLeft, spiralLeft], int(co[2][0]), int(co[2][1]), 266, 283, 'left', 1, 3, 5)
-#bullet_speed, bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1
+#bullet_speed, bullet_height, bullet_imgs, imgsRight, imgsLeft, x, y, width, height, direction, speed, bullet_strength, health=1, jumps=False
 	wizard = Wizard()
 	dirchanged = False #direction changed
 	Dying = False
@@ -587,8 +604,8 @@ lazer = pygame.mixer.Sound("lazer.wav")
 pygame.mixer.music.load("music.mp3")
 pygame.mixer.music.play()
 current_time = time.time()
-fileparser("level5")
-time.sleep(3)
+#fileparser("level4")
+#time.sleep(3)
 fileparser("water")
 time.sleep(3)
 fileparser("level2")
@@ -596,6 +613,6 @@ time.sleep(3)
 fileparser("level3")
 time.sleep(3)
 fileparser("level4")
-#time.sleep(3)
-#fileparser("level5")
+time.sleep(3)
+fileparser("level5")
 endloop()
